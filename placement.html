@@ -239,6 +239,13 @@ body{min-width:0}main{min-height:0}.bar{flex-shrink:0;flex-wrap:wrap;overflow:vi
 
 .gradeBaseRow{display:flex;align-items:center;gap:8px;margin:12px 0}.gradeBaseRow label{font-size:12px;font-weight:650;white-space:nowrap}.gradeBaseRow select{flex:1;width:auto;min-width:70px}.gradeBaseRow button{flex-shrink:0}.gradeApply{width:100%;min-height:44px;margin-top:10px}.gradeRefs{padding:10px 0}.gradeRefs label{margin-bottom:7px}.gradeRefs select{font-size:11px}.gradeStatus{font-size:12px;color:#216c54;line-height:1.6;margin:8px 0;overflow-wrap:anywhere}.gradeStatus.error{color:#a53034}#gradeApplyHint{font-size:11px;margin-top:7px;margin-bottom:0}#positionTable{table-layout:fixed}#positionTable th:first-child{width:54px}#positionTable td{padding:6px 3px}#positionTable input{width:100%;min-width:0;min-height:34px;font-size:12px;padding:6px;text-align:right;font-variant-numeric:tabular-nums}#positionTable td:first-child{cursor:pointer}#positionTable tr.gradeBase td:first-child{color:#6d28d9;font-weight:700}#positionTable tr.gradeBase{background:#f5f0ff}#positionTable tr.on{box-shadow:inset 3px 0 #8b5cf6}#positionTable small{font-size:10px}#positionTable input:disabled{background:#f2f4f7;color:#8c96a4;cursor:not-allowed}#gradeInputHint{font-size:11px;margin-bottom:5px}
 
+.lineVis #lineVisList{max-height:320px;overflow:auto;margin-top:8px;border:1px solid #e4eaf0;border-radius:8px}
+.lineVis #lineVisList:empty{display:none}
+.lineVisRow{display:flex;align-items:center;gap:10px;padding:4px 8px;border-bottom:1px solid #eef2f5;font-size:12px;cursor:pointer}
+.lineVisRow:last-child{border-bottom:0}
+.lineVisRow input{width:auto;flex:none;margin:0}
+.lineVisRow canvas{width:44px;height:44px;border:1px solid #e1e7ee;border-radius:4px;flex:none;background:#fff}
+.lineVisPiece{font-size:11.5px;font-weight:600;color:#5b6b7d;padding:6px 8px;background:#f5f7f9;overflow-wrap:anywhere}
 </style></head><body>
 
 <aside>
@@ -289,6 +296,12 @@ body{min-width:0}main{min-height:0}.bar{flex-shrink:0;flex-wrap:wrap;overflow:vi
 
 <div class="drop" id="dropPat"><b>拖曳版片 PNG</b>可多選</div>
     <div class="filelist" id="listPat"></div>
+    <details class="annotationDetails lineVis" id="lineVisPanel" open hidden>
+      <summary>版片內部線 <span id="lineVisStatus" style="font-weight:400"></span></summary>
+      <p class="hint" id="lineVisHint">依 Pattern 頁的勾選帶入；可在此直接顯示／隱藏，預覽、PNG、PSD 同步。隱藏的線不出現在圖面，也不列入量測點選。</p>
+      <div class="fillrow lineVisActions"><button id="lineShowAll">全部顯示</button><button id="lineHideAll">全部隱藏</button></div>
+      <div id="lineVisList"></div>
+    </details>
   </section>
 
   <section id="s2">
@@ -418,6 +431,19 @@ body{min-width:0}main{min-height:0}.bar{flex-shrink:0;flex-wrap:wrap;overflow:vi
   <section id="s7" data-fold="1" class="locked">
     <h2><b>8</b>版面</h2>
     <p class="lockhint">放好版片後開放</p>
+    <label class="f"><em>版片對齊（各尺碼排列基準）</em>
+      <select id="patAlign">
+        <option value="bottom">下緣對齊（原本排法）</option>
+        <option value="top">上緣對齊</option>
+        <option value="center">置中對齊</option>
+        <option value="base">定位基準對齊（上身：領縫下 HPS／下身：腰線或褲口）</option>
+        <option value="art">印圖上緣對齊</option>
+        <option value="line">記號線對齊（選一條內部線）</option>
+      </select>
+    </label>
+    <label class="f" id="patAlignRefWrap" hidden><em id="patAlignRefLabel">對齊哪一條</em><select id="patAlignRef"></select></label>
+    <input type="hidden" id="patAlignRefV" value="">
+    <p class="hint" id="patAlignHint">只移動版片在版面上的排列位置；印圖定位、標註數字與尺寸都不變。</p>
     <div class="two">
       <label class="f"><em>每列尺碼數</em><input type="number" id="cols" value="6" min="1" max="12"></label>
       <label class="f"><em>輸出寬度</em><span class="unit"><input type="number" id="outW" value="6000" min="1200" max="12000" step="100"><i>px</i></span></label>
@@ -1459,7 +1485,10 @@ function computeLayout(){
   const maxPan=Math.max(...groups.map(g=>g.length));
   const panGap=maxW*0.05;
   const gapX=maxW*0.12,gapY=maxH*0.22,labelH=maxH*0.10;
-  const cellW=maxW*maxPan+panGap*(maxPan-1)+gapX,cellH=maxH+gapY+labelH;
+  // 版片對齊：每片取一個對齊點（距 PNG 上緣），同列所有對齊點落在同一條水平線上。
+  const align=patAlignAnchors(groups),alignTop=Math.max(...state.pats.map(p=>align.get(p))),
+        alignBelow=Math.max(...state.pats.map(p=>p.h-align.get(p))),spanH=alignTop+alignBelow;
+  const cellW=maxW*maxPan+panGap*(maxPan-1)+gapX,cellH=spanH+gapY+labelH;
   const rows=Math.ceil(groups.length/cols),marg=maxW*0.10;
   const headH=maxH*0.16,F=maxH*0.042*fS;
   const lines=footerLines();
@@ -1483,7 +1512,7 @@ function computeLayout(){
     let cursor=cellX+(cellW-totW)/2;
     const pan={};
     grp.forEach(p=>{
-      const px=cursor,py=cellY+labelH+(maxH-p.h);
+      const px=cursor,py=cellY+labelH+alignTop-align.get(p);
       const o=originOf(p,px,py);
       pan[String(p.panel||"1")]={p,px,py,oX:o.oX,oY:o.oY,ppi:patDpi(p)||72};
       cursor+=p.w+panGap;
@@ -1561,7 +1590,7 @@ function anchorX(ref,gi,pa,atY){
 /* ---------- painters ---------- */
 function paintPattern(x,gi,env){
   Object.values(gi.pan).forEach(pa=>
-    x.drawImage(env.doFill&&pa.p.filled?pa.p.filled:pa.p.img,pa.px,pa.py,pa.p.w,pa.p.h));
+    x.drawImage(patternArt(pa.p,env),pa.px,pa.py,pa.p.w,pa.p.h));
 }
 function paintItem(x,gi,it){
   const pl=gi.place[it.id];if(!pl||!pl.has)return;
@@ -1998,7 +2027,7 @@ document.querySelectorAll("#modeSeg button").forEach(b=>b.onclick=()=>{
 /* PSD import extends the original placement workflow. */
 let pendingPsd=null,legacyWorking=false,placementDirty=false;
 const cleanText=s=>String(s||'').replace(/[<>"'&]/g,'').slice(0,120);
-const validSize=s=>/^[\p{L}\p{N}][\p{L}\p{N}._ -]{0,23}$/u.test(s)&&!['constructor','prototype','__proto__'].includes(s);
+const validSize=s=>/^[\p{L}\p{N}][\p{L}\p{N}._ \/-]{0,23}$/u.test(s)&&!['constructor','prototype','__proto__'].includes(s);
 function legacyMessage(s,error=false){$('#legacyStatus').textContent=s;$('#legacyStatus').classList.toggle('error',error);}
 function variantFor(it,size){return it.variants?.[size]||{canvas:it.canvas,aspect:it.aspect};}
 function docImage(im){if(!im||!im.width||!im.height)return null;const c=cvs(im.width,im.height),x=c.getContext('2d'),data=x.createImageData(im.width,im.height);data.data.set(im.data);x.putImageData(data,0,0);return c;}
@@ -2073,7 +2102,7 @@ const settingIds=['bodyMode','sideRef','vFrom','vRef','offRef','unit','manPat','
 const checkIds=['hpsLine','autoAnnoOn','footThumbs','autoFoot','doFill','showAnno'];
 async function canvasUrl(img){const c=cvs(img.naturalWidth||img.width,img.naturalHeight||img.height);c.getContext('2d').drawImage(img,0,0);return c.toDataURL('image/png');}
 $('#savePlacement').onclick=()=>legacyTask('正在儲存定位專案…',async()=>{
- const pats=[];for(const p of state.pats)pats.push({name:p.name,size:p.size,panel:p.panel,dpi:p.dpi,pocket:p.pocket||null,bridgePiece:p.bridgePiece||null,guides:p.guides||[],png:await canvasUrl(p.img)});
+ const pats=[];for(const p of state.pats)pats.push({name:p.name,size:p.size,panel:p.panel,dpi:p.dpi,pocket:p.pocket||null,bridgePiece:p.bridgePiece||null,guides:p.guides||[],vectorLines:!!p.vectorLines,lineStyle:p.lineStyle||null,png:await canvasUrl(p.img)});
  const items=[];for(const it of state.items){const variants={};for(const [s,v] of Object.entries(it.variants||{}))variants[s]={png:await canvasUrl(v.canvas),aspect:v.aspect};items.push({id:it.id,name:it.name,dpi:it.dpi,box:it.box,rot:it.rot,panel:it.panel,W:it.W,aspect:it.aspect,baseSize:it.baseSize||null,gradeRefs:it.gradeRefs||{},png:await canvasUrl(it.canvas),variants});}
  const settings={};settingIds.forEach(id=>settings[id]=$('#'+id).value);checkIds.forEach(id=>settings[id]=$('#'+id).checked);settings.manualOn=manualOn();
  const data={format:'placement-builder',version:2,pats,items,place:state.place,annos:state.annos,settings,uid:state.uid,psdName:state.psdName||'',original:state.psdSource?await canvasUrl(state.psdSource):null};placementDownload(cleanText($('#title').value||'定位專案')+'.placement-v2.json',new Blob([JSON.stringify(data)],{type:'application/json'}));placementDirty=false;
@@ -2086,7 +2115,7 @@ async function loadPlacementProject(file){
  for(const [id,values] of Object.entries({bodyMode:['upper','lower'],sideRef:['left','right','center','red'],vFrom:['top','bottom'],vRef:['top','bottom','cy'],offRef:['left','right','cx'],unit:['in','cm','mm'],titlePos:['left','center']})){if(!values.includes(d.settings[id]))throw Error('專案設定無效：'+id);}
  if(new Set(d.items.map(it=>it.id)).size!==d.items.length||d.items.some(it=>['constructor','prototype','__proto__'].includes(it.id)))throw Error('印圖識別碼無效。');
  const annos=d.annos.map((a,i)=>{const v=a.kind==='v',refs=new Set(v?['hps','ptop','pbot','redtop','hem','pktop','pkbottom']:['cf','pleft','pcx','pright','redline','pkleft','pkright']);for(const it of d.items)for(const part of v?['top','bottom','cy']:['left','right','cx'])refs.add(it.id+':'+part);if(!['v','h'].includes(a.kind)||(!refs.has(a.from)&&!measureDecode(a.from))||(!refs.has(a.to)&&!measureDecode(a.to))||!(v?['left','cx','right','cf']:['cy','top','bottom','hps']).includes(a.base)||!Number.isFinite(a.at)||Math.abs(a.at)>10000)throw Error('標註資料無效。');return {id:'n'+(1000+i),kind:a.kind,from:a.from,to:a.to,base:a.base,at:a.at,color:hex(a.color)||'#C026D3',mirror:!!a.mirror,label:cleanText(a.label)};});
- const pats=[];for(const p of d.pats){if(!validSize(p.size)||(p.dpi!=null&&(!Number.isFinite(p.dpi)||p.dpi<=0)))throw Error('版片尺碼或 DPI 無效。');const img=await projectImage(p.png),pat=analysePattern(img);pats.push({...pat,name:cleanText(p.name),size:p.size,panel:cleanText(p.panel),dpi:p.dpi,pocket:p.pocket,bridgePiece:typeof p.bridgePiece==='string'?p.bridgePiece.slice(0,240):null,guides:validateGuideLines(p.guides,pat.w,pat.h)});}
+ const pats=[];for(const p of d.pats){if(!validSize(p.size)||(p.dpi!=null&&(!Number.isFinite(p.dpi)||p.dpi<=0)))throw Error('版片尺碼或 DPI 無效。');const img=await projectImage(p.png),pat=analysePattern(img);pats.push({...pat,name:cleanText(p.name),size:p.size,panel:cleanText(p.panel),dpi:p.dpi,pocket:p.pocket,bridgePiece:typeof p.bridgePiece==='string'?p.bridgePiece.slice(0,240):null,guides:validateGuideLines(p.guides,pat.w,pat.h),vectorLines:p.vectorLines===true,lineStyle:lineStyleOf(p.lineStyle)});}
  const items=[];for(const it of d.items){if(!/^[A-Za-z][A-Za-z0-9_-]*$/.test(it.id)||!Number.isFinite(it.W)||it.W<=0||!Number.isFinite(it.rot))throw Error('印圖資料無效。');const img=await projectImage(it.png),c=cvs(img.naturalWidth,img.naturalHeight);c.getContext('2d').drawImage(img,0,0);const variants={};for(const [s,v] of Object.entries(it.variants||{})){if(!validSize(s))throw Error('尺碼資料無效。');const im=await projectImage(v.png),cv=cvs(im.naturalWidth,im.naturalHeight);cv.getContext('2d').drawImage(im,0,0);variants[s]={canvas:cv,aspect:cv.height/cv.width};}items.push({...it,name:cleanText(it.name),panel:cleanText(it.panel),canvas:c,aspect:c.height/c.width,variants});}
  const place={};for(const it of items){place[it.id]={};for(const p of pats){const v=d.place?.[it.id]?.[p.size];if(v&&!['scale','drop','off'].every(k=>v[k]===null||Number.isFinite(v[k])))throw Error('定位數值無效。');if(v){place[it.id][p.size]={scale:v.scale,drop:v.drop,off:v.off};if(v.rot!=null){if(!Number.isFinite(v.rot)||Math.abs(v.rot)>36000)throw Error('角度資料無效。');place[it.id][p.size].rot=normalizeRotation(v.rot);}if(v.guideRule)place[it.id][p.size].guideRule=validateGuideRule(v.guideRule);if(v.x!=null||v.y!=null){if(!Number.isFinite(v.x)||!Number.isFinite(v.y)||Math.abs(v.x)>1e6||Math.abs(v.y)>1e6)throw Error("印圖位置無效。");place[it.id][p.size].x=v.x;place[it.id][p.size].y=v.y;}}}}
  const original=d.original?await projectImage(d.original):null;
@@ -2430,7 +2459,7 @@ async function bridgeImport(packet,mode){
  for(const r of records){
   if(!validSize(r.size))throw Error('尺碼名稱無效：'+r.size);
   const {img}=await readImage(r.blob),p=analysePattern(img);if(!panels.has(r.piece))panels.set(r.piece,String(++number));
-  Object.assign(p,{name:r.name,size:r.size,panel:panels.get(r.piece),dpi:r.dpi,bridgePiece:r.piece,guides:validateGuideLines(r.guides,img.naturalWidth||img.width,img.naturalHeight||img.height)});prepared.push(p);
+  Object.assign(p,{name:r.name,size:r.size,panel:panels.get(r.piece),dpi:r.dpi,bridgePiece:r.piece,guides:validateGuideLines(r.guides,img.naturalWidth||img.width,img.naturalHeight||img.height),vectorLines:packet.vectorLines===true,lineStyle:lineStyleOf(packet.lineStyle)});prepared.push(p);
  }
  // Decode every image before changing the current project.
  if(mode==='replace'){
@@ -2452,7 +2481,7 @@ function rotationOf(it,size){const r=state.place[it.id]?.[size]?.rot;return Numb
 const normalizeRotation=r=>((r+180)%360+360)%360-180;
 function validateGuideLines(lines,w,h){
  if(lines==null)return [];if(!Array.isArray(lines)||lines.length>500)throw Error('記號線資料過多或格式無效。');let total=0;const ids=new Set();
- return lines.map(l=>{if(!l||typeof l.id!=='string'||!/^[-\w:]{1,100}$/.test(l.id)||ids.has(l.id)||!Array.isArray(l.points)||l.points.length<2||l.points.length>10000)throw Error('記號線資料無效。');ids.add(l.id);total+=l.points.length;if(total>50000)throw Error('記號線點數過多。');const points=l.points.map(p=>{if(!Array.isArray(p)||p.length!==2||!p.every(Number.isFinite)||Math.abs(p[0])>w*4+100||Math.abs(p[1])>h*4+100)throw Error('記號線座標無效。');return [p[0],p[1]];});return {id:l.id,label:cleanText(l.label||'記號線'),points};});
+ return lines.map(l=>{if(!l||typeof l.id!=='string'||!/^[-\w:]{1,100}$/.test(l.id)||ids.has(l.id)||!Array.isArray(l.points)||l.points.length<2||l.points.length>10000)throw Error('記號線資料無效。');ids.add(l.id);total+=l.points.length;if(total>50000)throw Error('記號線點數過多。');const points=l.points.map(p=>{if(!Array.isArray(p)||p.length!==2||!p.every(Number.isFinite)||Math.abs(p[0])>w*4+100||Math.abs(p[1])>h*4+100)throw Error('記號線座標無效。');return [p[0],p[1]];});return {id:l.id,label:cleanText(l.label||'記號線'),points,...(l.hidden===true?{hidden:true}:{})};});
 }
 function validateGuideRule(rule){
  if(!rule)return null;const ref=r=>{if(!r)return null;if(typeof r.id!=='string'||!/^[-\w:]{1,100}$/.test(r.id)||!Number.isInteger(r.segment)||r.segment<0||r.segment>9999)throw Error('對齊規則無效。');return {id:r.id,segment:r.segment};};
@@ -2463,13 +2492,13 @@ function guideNote(s,error=false){$('#guideStatus').textContent=s;$('#guideStatu
 const guideClone=x=>JSON.parse(JSON.stringify(x));
 function guideSnapshot(){state.gradeUndo=null;state.guideUndo=guideClone(state.place);}
 function guideAngle(id,size,value,snapshot=true){const it=state.items.find(i=>i.id===id),n=Number(value);if(!it||String(value).trim()===''||!Number.isFinite(n)||Math.abs(n)>36000)throw Error('請輸入有效角度，例如 -3.5。');if(snapshot)guideSnapshot();pv(id,size).rot=normalizeRotation(n);placementDirty=true;render();refreshSel();return pv(id,size).rot;}
-function guideEntries(p){const a=[];for(const l of p.guides||[])for(let i=0;i+1<l.points.length;i++){const x=l.points[i],y=l.points[i+1];if(Math.hypot(x[0]-y[0],x[1]-y[1])<.1)continue;a.push({ref:{id:l.id,segment:i},a:x,b:y,label:l.label+(l.points.length>2?` · 段 ${i+1}`:'')});}return a;}
+function guideEntries(p,all){const a=[];for(const l of p.guides||[]){if(l.hidden&&!all)continue;for(let i=0;i+1<l.points.length;i++){const x=l.points[i],y=l.points[i+1];if(Math.hypot(x[0]-y[0],x[1]-y[1])<.1)continue;a.push({ref:{id:l.id,segment:i},a:x,b:y,hidden:!!l.hidden,label:l.label+(l.points.length>2?` · 段 ${i+1}`:'')});}}return a;}
 const guideRefKey=r=>r?JSON.stringify([r.id,r.segment]):'';
 const guideDecode=s=>{if(!s)return null;const a=JSON.parse(s);return {id:a[0],segment:a[1]};};
 function guideRule(c){return c.v.guideRule||(c.v.guideRule={main:null,cross:null,side:'center',end:'bottom',gap:0,crossGap:0,follow:true});}
 function guideSignedInput(s){s=String(s).trim();const sign=s.startsWith('-')?-1:1;return sign*gradeParse(s.replace(/^[+-]/,''));}
 function guideReadForm(c){return validateGuideRule({main:guideDecode($('#guideMain').value),cross:guideDecode($('#guideCross').value),side:$('#guideSide').value,end:$('#guideEnd').value,gap:guideSignedInput($('#guideGap').value),crossGap:guideSignedInput($('#guideCrossGap').value),follow:$('#guideFollow').checked});}
-function guideLine(c,ref){const l=guideEntries(c.pa.p).find(l=>guideRefKey(l.ref)===guideRefKey(ref));if(!l)throw Error(`${c.size} 找不到對應記號線，請先在該尺碼選線或手動畫線。`);let [ax,ay]=l.a,[bx,by]=l.b;if(by<ay||(Math.abs(by-ay)<1e-8&&bx<ax)){[ax,bx]=[bx,ax];[ay,by]=[by,ay];}const len=Math.hypot(bx-ax,by-ay),d=[(bx-ax)/len,(by-ay)/len];return {a:[ax,ay],b:[bx,by],d,n:[d[1],-d[0]]};}
+function guideLine(c,ref){const l=guideEntries(c.pa.p,true).find(l=>guideRefKey(l.ref)===guideRefKey(ref));if(!l)throw Error(`${c.size} 找不到對應記號線，請先在該尺碼選線或手動畫線。`);let [ax,ay]=l.a,[bx,by]=l.b;if(by<ay||(Math.abs(by-ay)<1e-8&&bx<ax)){[ax,bx]=[bx,ax];[ay,by]=[by,ay];}const len=Math.hypot(bx-ax,by-ay),d=[(bx-ax)/len,(by-ay)/len];return {a:[ax,ay],b:[bx,by],d,n:[d[1],-d[0]]};}
 function guideSolve(c,rule){
  if(!rule.main)throw Error('請先選方向基準線。');const l=guideLine(c,rule.main),rot=rule.follow?normalizeRotation(Math.atan2(l.d[1],l.d[0])*180/Math.PI-90):rotationOf(c.it,c.size),r=rot*Math.PI/180,u=[Math.cos(r),Math.sin(r)],v=[-Math.sin(r),Math.cos(r)],side={left:-1,center:0,right:1}[rule.side],sx=side*c.pl.uw/2*u[0],sy=side*c.pl.uw/2*u[1],dot=(a,b)=>a[0]*b[0]+a[1]*b[1];
  const b1=dot(l.n,l.a)+rule.gap*c.pa.ppi-dot(l.n,[sx,sy]);let x=c.pl.cx-c.pa.px,y=c.pl.cy-c.pa.py;
@@ -2482,7 +2511,7 @@ function guideRefresh(){
  const c=guideContext();$('#guideSelected').textContent=c?`${c.size} · ${c.it.name} · ${rotationOf(c.it,c.size).toFixed(1)}°`:'先點選預覽中的某尺碼印圖';
  for(const id of ['angleCopyBase','guidePickMain','guideManualMain','guidePickCross','guideManualCross','guideApply','guideApplyAll'])$('#'+id).disabled=!c;
  $('#guideUndo').disabled=!state.guideUndo;$('#guideCancel').hidden=!state.guidePick;
- if(!c)return;const rule=guideRule(c),entries=guideEntries(c.pa.p),options=[['','未選取'],...entries.map(l=>[guideRefKey(l.ref),l.label])];
+ if(!c)return;const rule=guideRule(c),keepRefs=new Set([guideRefKey(rule.main),guideRefKey(rule.cross)]),entries=guideEntries(c.pa.p,true).filter(e=>!e.hidden||keepRefs.has(guideRefKey(e.ref))),options=[['','未選取'],...entries.map(l=>[guideRefKey(l.ref),l.label])];
  gradeUpdateSelect($('#guideMain'),options,guideRefKey(rule.main));gradeUpdateSelect($('#guideCross'),options,guideRefKey(rule.cross));
  for(const [id,key] of [['guideSide','side'],['guideEnd','end']])$('#'+id).value=rule[key];$('#guideFollow').checked=rule.follow;
  for(const [id,key] of [['guideGap','gap'],['guideCrossGap','crossGap']])if(document.activeElement!==$('#'+id))$('#'+id).value=String(+(rule[key]*U().f).toFixed(4));
@@ -2492,7 +2521,7 @@ function guideScale(L){return Math.max(.001,$('#sheet').getBoundingClientRect().
 function guideHandle(c,painting=false){const angle=rotationOf(c.it,c.size),old=state.guideHandleCache;if(!painting&&old&&old.id===c.id&&old.size===c.size&&old.cx===c.pl.cx&&old.cy===c.pl.cy&&old.angle===angle)return old;const k=guideScale(c.L),r=angle*Math.PI/180,d=c.pl.uh/2+28/k,h={x:c.pl.cx+Math.sin(r)*d,y:c.pl.cy-Math.cos(r)*d,radius:9/k,id:c.id,size:c.size,cx:c.pl.cx,cy:c.pl.cy,angle};if(painting)state.guideHandleCache=h;return h;}
 function guidePaint(){if(state.pick)return;const c=guideContext();if(!c)return;const x=$('#sheet').getContext('2d'),k=guideScale(c.L),rule=guideRule(c);x.save();x.setTransform(c.L.s,0,0,c.L.s,0,0);
  const line=(a,b,color,width)=>{x.strokeStyle=color;x.lineWidth=width/k;x.beginPath();x.moveTo(a[0]+c.pa.px,a[1]+c.pa.py);x.lineTo(b[0]+c.pa.px,b[1]+c.pa.py);x.stroke();};
- for(const e of guideEntries(c.pa.p)){const selected=guideRefKey(e.ref)===guideRefKey(rule.main),cross=guideRefKey(e.ref)===guideRefKey(rule.cross);if(state.guidePick||selected||cross)line(e.a,e.b,selected?'#a020d0':cross?'#00a096':'#51a6ee',selected||cross?3:1.5);}
+ for(const e of guideEntries(c.pa.p,true)){const selected=guideRefKey(e.ref)===guideRefKey(rule.main),cross=guideRefKey(e.ref)===guideRefKey(rule.cross);if((state.guidePick&&!e.hidden)||selected||cross)line(e.a,e.b,selected?'#a020d0':cross?'#00a096':'#51a6ee',selected||cross?3:1.5);}
  if(rule.main){try{const l=guideLine(c,rule.main),mid=[(l.a[0]+l.b[0])/2,(l.a[1]+l.b[1])/2],end=[mid[0]+l.n[0]*25/k,mid[1]+l.n[1]*25/k];line(mid,end,'#a020d0',2);x.fillStyle='#a020d0';x.font=`${14/k}px sans-serif`;x.fillText('+',end[0]+c.pa.px,end[1]+c.pa.py);}catch{}}
  if(state.guidePick?.first){const p=state.guidePick.first;x.fillStyle='#a020d0';x.beginPath();x.arc(c.pa.px+p[0],c.pa.py+p[1],5/k,0,Math.PI*2);x.fill();}
  const h=guideHandle(c,true),angle=c.pl.rot*Math.PI/180;x.strokeStyle='#8745dc';x.lineWidth=2/k;x.setLineDash([]);x.beginPath();x.moveTo(c.pl.cx+Math.sin(angle)*c.pl.uh/2,c.pl.cy-Math.cos(angle)*c.pl.uh/2);x.lineTo(h.x,h.y);x.stroke();x.fillStyle='white';x.beginPath();x.arc(h.x,h.y,h.radius,0,Math.PI*2);x.fill();x.stroke();x.beginPath();x.arc(h.x,h.y,4/k,.5*Math.PI,2*Math.PI);x.stroke();x.beginPath();x.moveTo(h.x+1/k,h.y-2/k);x.lineTo(h.x+4/k,h.y);x.lineTo(h.x+6/k,h.y-3/k);x.stroke();x.restore();
@@ -2562,7 +2591,7 @@ const measureOldOptions=refOptions;
 refOptions=function(kind){
  const list=measureOldOptions(kind),it=flowItem(),c=guideContext(flowSize(),it?.id),seen=new Set(list.map(p=>p[0]));
  const add=ref=>{if(!seen.has(ref)){seen.add(ref);list.push([ref,measureName(ref)]);}};
- if(c)for(const line of c.pa.p.guides||[]){const station=kind==='v'?c.pl.cx-c.pa.px:c.pl.cy-c.pa.py,n=measureIntersections(line,kind,station).length;for(let branch=0;branch<n;branch++)add(measureRef(line.id,branch));}
+ if(c)for(const line of (c.pa.p.guides||[]).filter(l=>!l.hidden)){const station=kind==='v'?c.pl.cx-c.pa.px:c.pl.cy-c.pa.py,n=measureIntersections(line,kind,station).length;for(let branch=0;branch<n;branch++)add(measureRef(line.id,branch));}
  for(const a of state.annos.filter(a=>a.kind===kind))for(const ref of [a.from,a.to])if(measureDecode(ref))add(ref);
  return list;
 };
@@ -2583,7 +2612,7 @@ flowPickCandidates=function(gi){
  try{q.from=null;arts=measureOldCandidates(gi);q.from=keep||{ref:q.id+':'+(q.kind==='v'?'top':'left')};edges=measureOldCandidates(gi);}finally{q.from=keep;}
  if(q.pattern)return arts;
  const pl=gi.place[q.id],pa=pl?.pan;if(!pl?.has)return [];
- for(const line of pa.p.guides||[]){
+ for(const line of (pa.p.guides||[]).filter(l=>!l.hidden)){
   const station=q.kind==='v'?pl.cx-pa.px:pl.cy-pa.py,hits=measureIntersections(line,q.kind,station);
   hits.forEach((value,branch)=>edges.push({ref:measureRef(line.id,branch),label:line.label+(branch?' · 交點'+(branch+1):''),x:q.kind==='v'?pl.cx:pa.px+value,y:q.kind==='v'?pa.py+value:pl.cy,art:false,size:gi.size,panel:String(pa.p.panel),guide:line}));
  }
@@ -2617,7 +2646,7 @@ paintFlowPick=function(x,L){
  const selected=measureDecode(state.pick?.pattern?.ref),k=($('#sheet').getBoundingClientRect().width||L.sheetW)/L.sheetW;
  x.save();x.lineWidth=1.6/Math.max(.01,k);x.globalAlpha=.65;
  const it=flowItem(),pl=it&&gi.place[it.id],kind=state.pick?.kind,station=pl&&(kind==='v'?pl.cx-pa.px:pl.cy-pa.py);
- for(const line of pa.p.guides||[]){const color=selected?.id===line.id?'#059669':'#1269BF';x.strokeStyle=color;x.setLineDash([]);x.beginPath();line.points.forEach((p,i)=>i?x.lineTo(p[0]+pa.px,p[1]+pa.py):x.moveTo(p[0]+pa.px,p[1]+pa.py));x.stroke();if(kind&&Number.isFinite(station)){for(const h of measureIntersectionData(line,kind,station).filter(h=>h.extended)){x.save();x.globalAlpha=.85;x.setLineDash([6/Math.max(.01,k),5/Math.max(.01,k)]);x.beginPath();x.moveTo(h.from[0]+pa.px,h.from[1]+pa.py);x.lineTo(h.point[0]+pa.px,h.point[1]+pa.py);x.stroke();x.restore();}}}x.restore();measureOldPaint(x,L);
+ for(const line of (pa.p.guides||[]).filter(l=>!l.hidden)){const color=selected?.id===line.id?'#059669':'#1269BF';x.strokeStyle=color;x.setLineDash([]);x.beginPath();line.points.forEach((p,i)=>i?x.lineTo(p[0]+pa.px,p[1]+pa.py):x.moveTo(p[0]+pa.px,p[1]+pa.py));x.stroke();if(kind&&Number.isFinite(station)){for(const h of measureIntersectionData(line,kind,station).filter(h=>h.extended)){x.save();x.globalAlpha=.85;x.setLineDash([6/Math.max(.01,k),5/Math.max(.01,k)]);x.beginPath();x.moveTo(h.from[0]+pa.px,h.from[1]+pa.py);x.lineTo(h.point[0]+pa.px,h.point[1]+pa.py);x.stroke();x.restore();}}}x.restore();measureOldPaint(x,L);
 };
 // Finite-difference probes near a finite curve's end must not abort a valid solve.
 function measureProbe(residual,x,y,axis,current){
@@ -2674,7 +2703,7 @@ const PsdEditable={
   for(const gi of L.geo){
    const kids=[];
    // Each panel can be moved/hidden independently instead of one size-wide bitmap.
-   for(const pa of Object.values(gi.pan)){const cv=cvs(Math.ceil(pa.p.w*s),Math.ceil(pa.p.h*s));cv.getContext('2d').drawImage(L.env.doFill&&pa.p.filled?pa.p.filled:pa.p.img,0,0,pa.p.w*s,pa.p.h*s);kids.push(this.imageLayer('版片 '+(pa.p.name||pa.p.panel||'Pattern'),cv,Math.round(pa.px*s),Math.round(pa.py*s)));}
+   for(const pa of Object.values(gi.pan)){const cv=cvs(Math.ceil(pa.p.w*s),Math.ceil(pa.p.h*s));cv.getContext('2d').drawImage(patternArt(pa.p,L.env),0,0,pa.p.w*s,pa.p.h*s);kids.push(this.imageLayer('版片 '+(pa.p.name||pa.p.panel||'Pattern'),cv,Math.round(pa.px*s),Math.round(pa.py*s)));}
    for(const it of state.items){const pl=gi.place[it.id];if(!pl?.has)continue;kids.push(await this.smartLayer('印圖 '+it.name+' · '+gi.size,pl.art||it.canvas,pl,s,linkedFiles,pngCache,it.dpi));if(it.box)kids.push(mk('外框 '+it.name,layerCell(gi,L,x=>paintBox(x,gi,it,L.env))));}
    if($('#hpsLine').checked)kids.push(mk('基準線 Guide',layerCell(gi,L,x=>paintHpsLine(x,gi,L.env))));
    if(L.env.showAnno)state.annos.forEach((a,i)=>{if(!annoGeom(gi,a))return;const tag=`標註 ${i+1} ${a.kind==='v'?'垂直':'水平'}`;kids.push(mk(tag+' 線',layerCell(gi,L,x=>paintAnno(x,gi,L.env,a,'line'))));kids.push(...this.captureText(L,tag+' 文字',x=>paintAnno(x,gi,L.env,a,'text')));});
@@ -2725,6 +2754,130 @@ const annoColorLoad=loadPlacementProject;loadPlacementProject=async function(fil
   $('#annoColor').value=annoColorValue();render();
  }
 };
+/* ---------- 版片內部線：由 Pattern 以向量帶入，可在此顯示／隱藏 ---------- */
+function lineStyleOf(v){const c=typeof v?.color==='string'?hex(v.color):null,w=Number(v?.width);return {color:c||'#FF6F9C',width:Number.isFinite(w)&&w>0&&w<=20?w:1};}
+function lineSourceKey(id){const m=/^internal:(\d{1,5}):\d{1,3}$/.exec(String(id));return m?'internal:'+m[1]:null;}
+function patternLines(p){return p.vectorLines?(p.guides||[]).filter(l=>!l.hidden&&lineSourceKey(l.id)):[];}
+// 只在版片內部（白色區域）畫線，與 Pattern 頁「內部線只畫在外框內」一致。
+function patternInteriorMask(p){
+ if(p._interior&&p._interior.img===p.img)return p._interior.canvas;
+ const c=cvs(p.w,p.h),x=c.getContext('2d',{willReadFrequently:true});x.drawImage(p.img,0,0);
+ const im=x.getImageData(0,0,p.w,p.h),d=im.data,inside=new Uint8Array(p.w*p.h);
+ for(let i=0,j=0;i<d.length;i+=4,j++){inside[j]=d[i+3]>16&&d[i]>=235&&d[i+1]>=235&&d[i+2]>=235?1:0;d[i]=d[i+1]=d[i+2]=0;d[i+3]=inside[j]?255:0;}
+ x.putImageData(im,0,0);p._interior={img:p.img,canvas:c,inside};return c;
+}
+function patternArt(p,env){
+ const base=env.doFill&&p.filled?p.filled:p.img,lines=patternLines(p);
+ if(!lines.length)return base;
+ const st=p.lineStyle||lineStyleOf(null),key=lines.map(l=>l.id).join('|')+'#'+st.color+'#'+st.width;
+ if(p._art&&p._art.base===base&&p._art.key===key)return p._art.canvas;
+ const ov=cvs(p.w,p.h),o=ov.getContext('2d');o.strokeStyle=st.color;o.lineWidth=st.width;o.lineJoin='round';o.lineCap='butt';
+ for(const l of lines){o.beginPath();l.points.forEach((q,i)=>i?o.lineTo(q[0],q[1]):o.moveTo(q[0],q[1]));o.stroke();}
+ o.globalCompositeOperation='destination-in';o.drawImage(patternInteriorMask(p),0,0);
+ const out=cvs(p.w,p.h),x=out.getContext('2d');x.drawImage(base,0,0);x.drawImage(ov,0,0);
+ p._art={base,key,canvas:out};return out;
+}
+function lineGroups(){
+ const groups=new Map();
+ for(const p of state.pats){if(!p.vectorLines)continue;const piece=p.bridgePiece||p.name;let g=groups.get(piece);if(!g)groups.set(piece,g={piece,pats:[],sources:new Map()});g.pats.push(p);
+  for(const l of p.guides||[]){const k=lineSourceKey(l.id);if(!k)continue;let e=g.sources.get(k);if(!e)g.sources.set(k,e={key:k,num:Number(k.split(':')[1]),label:String(l.label||'記號線').replace(/（鏡像）$/,''),shown:false,ids:new Set()});e.ids.add(l.id);if(!l.hidden)e.shown=true;}}
+ const out=[...groups.values()];out.forEach(g=>g.list=[...g.sources.values()].sort((a,b)=>a.num-b.num));return out.filter(g=>g.list.length);
+}
+function setLineVisible(piece,keys,visible){
+ for(const p of state.pats){if(!p.vectorLines||(piece!=null&&(p.bridgePiece||p.name)!==piece))continue;
+  for(const l of p.guides||[]){const k=lineSourceKey(l.id);if(k&&(!keys||keys.has(k))){if(visible)delete l.hidden;else l.hidden=true;}}}
+}
+function lineThumb(g,e){
+ const prefer=g.pats.filter(p=>(p.guides||[]).some(l=>lineSourceKey(l.id)===e.key)),p=prefer.find(p=>p.size===state.transferBaseSize)||prefer[Math.floor((prefer.length-1)/2)]||g.pats[0];
+ const S=88,c=document.createElement('canvas');c.width=c.height=S;const x=c.getContext('2d');
+ const w=p.bx1-p.bx0+1,h=p.by1-p.by0+1,k=Math.min((S-8)/w,(S-8)/h),ox=(S-w*k)/2-p.bx0*k,oy=(S-h*k)/2-p.by0*k;
+ x.fillStyle='#fff';x.fillRect(0,0,S,S);x.globalAlpha=.1;x.drawImage(patternInteriorMask(p),ox,oy,p.w*k,p.h*k);x.globalAlpha=.7;x.drawImage(p.img,ox,oy,p.w*k,p.h*k);x.globalAlpha=1;
+ x.strokeStyle='#d93274';x.lineWidth=3;x.lineJoin='round';
+ for(const l of p.guides||[])if(lineSourceKey(l.id)===e.key){x.beginPath();l.points.forEach((q,i)=>i?x.lineTo(ox+q[0]*k,oy+q[1]*k):x.moveTo(ox+q[0]*k,oy+q[1]*k));x.stroke();}
+ return c;
+}
+function refreshLineVis(){
+ const panel=$('#lineVisPanel');if(!panel)return;
+ const groups=lineGroups(),legacy=state.pats.some(p=>!p.vectorLines&&(p.guides||[]).some(l=>/^internal:/.test(l.id)));
+ const total=groups.reduce((n,g)=>n+g.list.length,0),shown=groups.reduce((n,g)=>n+g.list.filter(e=>e.shown).length,0);
+ panel.hidden=!total&&!legacy;$('#lineShowAll').disabled=$('#lineHideAll').disabled=!total;
+ $('#lineVisStatus').textContent=total?`顯示 ${shown} / ${total} 條`:'';
+ $('#lineVisHint').textContent=total?'依 Pattern 頁的勾選帶入；可在此直接顯示／隱藏，預覽、PNG、PSD 同步。同一版片所有尺碼一起變更；隱藏的線不出現在圖面，也不列入量測點選。'
+  :'這批版片來自舊版 Pattern 頁，內部線已合併在 PNG 上，無法在此隱藏。請用新版 Pattern 頁重新送出（選「清除目前內容」）。';
+ const box=$('#lineVisList');box.replaceChildren();
+ for(const g of groups){
+  if(groups.length>1){const h=document.createElement('div');h.className='lineVisPiece';h.textContent=g.piece;box.append(h);}
+  for(const e of g.list){
+   const row=document.createElement('label');row.className='lineVisRow';
+   const input=document.createElement('input');input.type='checkbox';input.checked=e.shown;input.setAttribute('aria-label',`顯示 ${g.piece} ${e.label}`);
+   input.onchange=()=>{setLineVisible(g.piece,new Set([e.key]),input.checked);lineVisChanged();};
+   const text=document.createElement('span');text.textContent=e.label+(e.ids.size>1?' · 雙側':'');
+   row.append(input,lineThumb(g,e),text);box.append(row);
+  }
+ }
+}
+function lineVisChanged(){placementDirty=true;refreshLineVis();refreshAlignRef();repaint();if(typeof guideRefresh==='function'&&state.layout)guideRefresh();}
+$('#lineShowAll').onclick=()=>{setLineVisible(null,null,true);lineVisChanged();};
+$('#lineHideAll').onclick=()=>{setLineVisible(null,null,false);lineVisChanged();};
+
+/* ---------- 版片對齊：決定各尺碼版片在版面上的排列基準 ---------- */
+const ALIGN_MODES=['bottom','top','center','base','art','line'];
+function patAlignMode(){const v=$('#patAlign')?.value;return ALIGN_MODES.includes(v)?v:'bottom';}
+function artTopRel(it,p){
+ const v=state.place[it.id]?.[p.size];if(!v||v.drop==null||!Number.isFinite(v.y)||!(it.W>0))return null;
+ const ppi=patDpi(p)||72,uw=it.W*ppi*(v.scale||100)/100,uh=uw*variantFor(it,p.size).aspect,r=rotationOf(it,p.size)*Math.PI/180,rh=Math.abs(Math.sin(r))*uw+Math.abs(Math.cos(r))*uh;
+ return v.y-rh/2;
+}
+// 取記號線在版片內可見部分的高度中點；線若超出外框，超出段不計（與圖面一致）。
+function lineAnchorRel(p,key){
+ patternInteriorMask(p);const inside=p._interior.inside,W=p.w,H=p.h;let y0=Infinity,y1=-Infinity,a0=Infinity,a1=-Infinity;
+ for(const l of p.guides||[])if(lineSourceKey(l.id)===key)for(let i=0;i+1<l.points.length;i++){
+  const [ax,ay]=l.points[i],[bx,by]=l.points[i+1],n=Math.max(1,Math.ceil(Math.hypot(bx-ax,by-ay)/2));
+  for(let k=0;k<=n;k++){const x=ax+(bx-ax)*k/n,y=ay+(by-ay)*k/n,xi=Math.round(x),yi=Math.round(y);a0=Math.min(a0,y);a1=Math.max(a1,y);
+   if(xi>=0&&yi>=0&&xi<W&&yi<H&&inside[yi*W+xi]){y0=Math.min(y0,y);y1=Math.max(y1,y);}}
+ }
+ return Number.isFinite(y0)?(y0+y1)/2:Number.isFinite(a0)?(a0+a1)/2:null;
+}
+function alignRefLine(){try{const a=JSON.parse($('#patAlignRef').value||'null');return Array.isArray(a)&&a.length===2?a:null;}catch(e){return null;}}
+// 回傳 Map：版片 → 對齊點距 PNG 上緣的像素。下緣對齊＝p.h，與原本排法完全相同。
+function patAlignAnchors(groups){
+ const mode=patAlignMode(),m=new Map(),own={bottom:p=>p.h,top:p=>p.by0,center:p=>(p.by0+p.by1)/2,base:p=>originOf(p,0,0).oY};
+ if(own[mode]){state.pats.forEach(p=>m.set(p,own[mode](p)));return m;}
+ const it=mode==='art'?(state.items.find(i=>i.id===$('#patAlignRef').value)||state.items[0]):null,line=mode==='line'?alignRefLine():null;
+ for(const grp of groups){
+  let rp=null,a=null;
+  if(it){rp=grp.find(p=>String(p.panel)===String(it.panel))||grp[0];a=artTopRel(it,rp);}
+  else if(line){rp=grp.find(p=>(p.bridgePiece||p.name)===line[0])||null;a=rp?lineAnchorRel(rp,line[1]):null;}
+  // 同一尺碼的其他片別，維持與參考片下緣對齊的相對位置。
+  if(rp&&Number.isFinite(a))grp.forEach(p=>m.set(p,a-rp.h+p.h));else grp.forEach(p=>m.set(p,p.h));
+ }
+ return m;
+}
+function refreshAlignRef(){
+ const sel=$('#patAlignRef');if(!sel)return;
+ const mode=patAlignMode(),want=$('#patAlignRefV').value;let opts=[],note='只移動版片在版面上的排列位置；印圖定位、標註數字與尺寸都不變。';
+ if(mode==='art'){opts=state.items.map(it=>[it.id,it.name]);$('#patAlignRefLabel').textContent='對齊哪一個印圖';if(!opts.length)note='尚未導入印圖，暫以下緣對齊。';else note='各尺碼的此印圖上緣排在同一水平線上，方便比對跳碼；'+note;}
+ else if(mode==='line'){const groups=lineGroups(),multi=groups.length>1;for(const g of groups)for(const e of g.list)opts.push([JSON.stringify([g.piece,e.key]),(multi?g.piece+' · ':'')+e.label+(e.shown?'':'（未顯示）')]);$('#patAlignRefLabel').textContent='對齊哪一條記號線（取該線的高度中點）';if(!opts.length)note='目前版片沒有內部線資料（需由新版 Pattern 頁送出），暫以下緣對齊。';else note='隱藏的線也可作為對齊基準，不會畫在圖上。'+note;}
+ else if(mode==='base')note=(isLower()?'下身以腰線／褲口（依步驟 4 的垂直基準）':'上身以領縫下 HPS（紅線頂端）')+'排成同一水平線。'+note;
+ $('#patAlignRefWrap').hidden=!(mode==='art'||mode==='line');
+ sel.replaceChildren(...opts.map(([v,t])=>{const o=document.createElement('option');o.value=v;o.textContent=t;return o;}));
+ if(opts.length)sel.value=opts.some(o=>o[0]===want)?want:opts[0][0];
+ $('#patAlignHint').textContent=note;
+}
+$('#patAlign').onchange=()=>{refreshAlignRef();placementDirty=true;repaint();};
+$('#patAlignRef').onchange=()=>{$('#patAlignRefV').value=$('#patAlignRef').value;placementDirty=true;repaint();};
+settingIds.push('patAlign','patAlignRefV');
+const lineOldDrawPatList=drawPatList;drawPatList=function(){lineOldDrawPatList();refreshLineVis();refreshAlignRef();};
+const alignOldDrawItemList=drawItemList;drawItemList=function(){alignOldDrawItemList();refreshAlignRef();};
+const alignOldBuildTabs=buildTabs;buildTabs=function(){alignOldBuildTabs();if(patAlignMode()==='art')refreshAlignRef();};
+const alignOldSyncMode=syncModeLabels;syncModeLabels=function(){alignOldSyncMode();refreshAlignRef();};
+const alignOldLoad=loadPlacementProject;loadPlacementProject=async function(file){
+ // 舊專案沒有對齊設定：回到原本的下緣對齊。
+ const prev=[$('#patAlign').value,$('#patAlignRefV').value];$('#patAlign').value='bottom';$('#patAlignRefV').value='';
+ try{await alignOldLoad(file);}catch(e){[$('#patAlign').value,$('#patAlignRefV').value]=prev;throw e;}
+ finally{if(!ALIGN_MODES.includes($('#patAlign').value))$('#patAlign').value='bottom';refreshLineVis();refreshAlignRef();repaint();}
+};
+refreshAlignRef();
 setupFolds();syncModeLabels();syncUnitLabels();updateGates();
 (function(){
   const g=$("#guide"),KEY="placementGuideSkip";

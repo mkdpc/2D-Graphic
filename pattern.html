@@ -567,8 +567,14 @@ function captureGradingMeta(g,ents){
  g.cutNoMirror=g.cut.map(line=>nm.some(e=>e.layer==='11'&&match(line[0],e)));
  // Preserve every legacy AAMA reference at a turn/curve point. Do not silently
  // overwrite conflicting TEXT records that happen to share a coordinate.
+ // AAMA writes a polyline's turn/curve POINT + "# n" TEXT right after its SEQEND,
+ // so each reference belongs to the preceding polyline. An internal line ending on
+ // the outline may legitimately carry a different rule from the outline point.
+ const owner=new Map(),count={};let last=null;
+ for(const e of ents){if(e.k==='poly'){count[e.layer]=(count[e.layer]||0)+1;last={layer:e.layer,idx:count[e.layer]-1};}else if(['2','3'].includes(e.layer))owner.set(e,last);}
+ const sameOwner=(a,b)=>(!a&&!b)||(a&&b&&a.layer===b.layer&&a.idx===b.idx);
  const legacy=ents.filter(e=>e.k==='text'&&['2','3'].includes(e.layer)&&/^#\s*\d+/.test(e.text));
- g.rules=[];for(const p of ents.filter(e=>e.k==='point'&&['2','3'].includes(e.layer)))for(const t of legacy.filter(t=>match([p.x,p.y],t))){const r=Number(/^#\s*(\d+)/.exec(t.text)[1]);if(!g.rules.some(q=>q.r===r&&match(q.p,p)))g.rules.push({p:[p.x,p.y],r});}
+ g.rules=[];for(const p of ents.filter(e=>e.k==='point'&&['2','3'].includes(e.layer))){const o=owner.get(p);for(const t of legacy.filter(t=>match([p.x,p.y],t)&&sameOwner(owner.get(t),o))){const r=Number(/^#\s*(\d+)/.exec(t.text)[1]);if(!g.rules.some(q=>q.r===r&&match(q.p,p)&&sameOwner(q.owner,o)))g.rules.push({p:[p.x,p.y],r,owner:o});}}
  // Same-layer TEXT grade references take priority over general turn/curve points.
  g.layerRules=ents.filter(e=>e.k==='text'&&['1','8','11','14'].includes(e.layer)&&/^#\s*\d+/.test(e.text)).map(e=>({p:[e.x,e.y],r:Number(/^#\s*(\d+)/.exec(e.text)[1]),layer:e.layer}));
  const refs=ents.filter(e=>e.k==='poly'&&e.layer==='5'&&e.pts.length===2);
@@ -582,19 +588,21 @@ function gradeGeom(g,rul,si,ss,unitScale){
  const gradeInfo={interpolated:0,unassignedInternal:[],unassignedOutline:false};
  const eq=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1])<.0002,axis=g.gradeAxis||[1,0];
  const off=r=>{if(r===0)return [0,0];const values=rul.rules[r];if(!values)throw Error('RUL 缺少放碼規則 #'+r+'，請確認 DXF／RUL 配對。');const [x,y]=ruleOffset(values,si,ss);return [(x*axis[0]-y*axis[1])*unitScale,(x*axis[1]+y*axis[0])*unitScale];};
- const ruleAt=(p,layer)=>{
+ const ruleAt=(p,layer,idx)=>{
   const specific=(g.layerRules||[]).filter(q=>q.layer===layer&&eq(q.p,p));
-  const candidates=specific.length?specific:g.rules.filter(q=>eq(q.p,p));
+  let candidates=specific.length?specific:g.rules.filter(q=>eq(q.p,p));
+  // Shared coordinate with conflicting rules: keep the rules owned by the line being graded.
+  if(!specific.length&&new Set(candidates.map(q=>q.r)).size>1){const own=candidates.filter(q=>q.owner&&q.owner.layer===layer&&(layer==='1'||idx===undefined||q.owner.idx===idx));if(own.length)candidates=own;}
   const ids=[...new Set(candidates.map(q=>q.r))];
   if(ids.length>1)throw Error('同一點有不同放碼規則（'+ids.map(r=>'#'+r).join('、')+'），不能自動判定，請由 CAD 匯出完整放碼巢圖。');
   return ids.length?ids[0]:null;
  };
- const deltaLine=(input,layer,closed=false)=>{
+ const deltaLine=(input,layer,closed=false,idx)=>{
   if(!input.length)return [];
   const duplicate=input.length>2&&eq(input[0],input.at(-1)),C=closed||duplicate,R=duplicate?input.slice(0,-1):input,n=R.length;
   const arc=[0];for(let i=1;i<n;i++)arc.push(arc.at(-1)+Math.hypot(R[i][0]-R[i-1][0],R[i][1]-R[i-1][1]));
   const perimeter=arc.at(-1)+(C?Math.hypot(R[0][0]-R.at(-1)[0],R[0][1]-R.at(-1)[1]):0);
-  const nodes=[];for(let i=0;i<n;i++){const r=ruleAt(R[i],layer);if(r!==null)nodes.push({i,s:arc[i],d:off(r)});}
+  const nodes=[];for(let i=0;i<n;i++){const r=ruleAt(R[i],layer,idx);if(r!==null)nodes.push({i,s:arc[i],d:off(r)});}
   if(layer==='8'&&(!nodes.length||(!C&&(nodes[0].i!==0||nodes.at(-1).i!==n-1))))gradeInfo.unassignedInternal.push(g.internal.indexOf(input));
   if(layer==='1'&&!nodes.length)gradeInfo.unassignedOutline=true;
   if(!nodes.length)return input.map(()=>[0,0]);
@@ -611,11 +619,11 @@ function gradeGeom(g,rul,si,ss,unitScale){
   });
   if(duplicate)result.push(result[0].slice());return result;
  };
- const moved=(line,layer,closed)=>{const ds=deltaLine(line,layer,closed);return line.map((p,i)=>[p[0]+ds[i][0],p[1]+ds[i][1]]);};
+ const moved=(line,layer,closed,idx)=>{const ds=deltaLine(line,layer,closed,idx);return line.map((p,i)=>[p[0]+ds[i][0],p[1]+ds[i][1]]);};
  const ds=deltaLine(g.outline,'1',true),outline=g.outline.map((p,i)=>[p[0]+ds[i][0],p[1]+ds[i][1]]);
  const projectedDelta=p=>{let best=Infinity,d=[0,0];for(let i=0;i<g.outline.length;i++){const j=(i+1)%g.outline.length,a=g.outline[i],b=g.outline[j],x=b[0]-a[0],y=b[1]-a[1],l=x*x+y*y,t=l?Math.max(0,Math.min(1,((p[0]-a[0])*x+(p[1]-a[1])*y)/l)):0,dist=Math.hypot(p[0]-a[0]-t*x,p[1]-a[1]-t*y);if(dist<best){best=dist;d=[ds[i][0]+(ds[j][0]-ds[i][0])*t,ds[i][1]+(ds[j][1]-ds[i][1])*t];}}return d;};
  const point=(p,layer,project=false)=>{const r=ruleAt(p,layer),d=r!==null?off(r):project?projectedDelta(p):[0,0];return [p[0]+d[0],p[1]+d[1]];};
- return {...g,outline,holes:g.holes.map(l=>moved(l,'1',true)),internal:g.internal.map(l=>moved(l,'8',false)),sew:g.sew.map(l=>moved(l,'14',false)),cut:g.cut.map(l=>moved(l,'11',false)),mirror:g.mirror.map(l=>l.map(p=>point(p,'1',true))),grain:g.grain.map(l=>l.map(p=>point(p,'7'))),notches:g.notches.map(p=>point(p,'4',true)),drills:g.drills.map(p=>point(p,'13')),gradeInfo};
+ return {...g,outline,holes:g.holes.map(l=>moved(l,'1',true)),internal:g.internal.map((l,i)=>moved(l,'8',false,i)),sew:g.sew.map((l,i)=>moved(l,'14',false,i)),cut:g.cut.map((l,i)=>moved(l,'11',false,i)),mirror:g.mirror.map(l=>l.map(p=>point(p,'1',true))),grain:g.grain.map(l=>l.map(p=>point(p,'7'))),notches:g.notches.map(p=>point(p,'4',true)),drills:g.drills.map(p=>point(p,'13')),gradeInfo};
 }
 
 
