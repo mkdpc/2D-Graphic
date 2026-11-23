@@ -1,7 +1,9 @@
 <!doctype html>
 <html lang="zh-Hant" class=""><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>印圖定位產生器 · 串接試用版</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%232f2f2d'/%3E%3Ctext x='16' y='21.5' font-size='13' text-anchor='middle' fill='%23fafaf7' font-family='Georgia,serif' letter-spacing='1'%3E2D%3C/text%3E%3C/svg%3E">
+<title>印圖定位產生器 · DPC</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500&family=Noto+Sans+TC:wght@300;400;500&display=swap">
 <style>
   :root{--ink:#0d1318;--panel:#151d25;--panel2:#1b252f;--rule:#2b3946;--rule2:#3a4c5c;
         --fg:#d5dee7;--fg2:#8b9bab;--mag:#c026d3;--ok:#3dd68c}
@@ -246,21 +248,173 @@ body{min-width:0}main{min-height:0}.bar{flex-shrink:0;flex-wrap:wrap;overflow:vi
 .lineVisRow input{width:auto;flex:none;margin:0}
 .lineVisRow canvas{width:44px;height:44px;border:1px solid #e1e7ee;border-radius:4px;flex:none;background:#fff}
 .lineVisPiece{font-size:11.5px;font-weight:600;color:#5b6b7d;padding:6px 8px;background:#f5f7f9;overflow-wrap:anywhere}
+
+/* v11 品牌跳檔 */
+.stepTitle{margin:0;padding:14px 20px 0;font-size:13px;font-weight:650}
+.stepTitle b{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:#e9e4fb;color:#5b21b6;font-size:11px;margin-right:7px}
+#brandInfo{margin:10px 0;padding:10px 11px;background:#f7f9fb;border:1px solid #e5ebf0;border-radius:8px;font-size:12px;line-height:1.7}
+.brSum div{overflow-wrap:anywhere}
+.brTips{margin:6px 0 0;padding-left:18px;color:#7a4b00;font-size:11.5px}
+.brTips li{overflow-wrap:anywhere}
+.brPreview{margin-top:8px;width:100%;font-size:11.5px}
+.brPreview td,.brPreview th{padding:3px 4px}
+.brPreview tr.gradeBase{background:#f5f0ff}
+.brFlag{color:#b45309}
+#positionTable th:nth-child(2){width:62px}#positionTable th:last-child{width:30px}
+#positionTable .brDelta{display:block;font-size:10px;color:#6b7280;text-align:right;min-height:12px;font-variant-numeric:tabular-nums}
+#positionTable input.brManual{background:#fff4e5;border-color:#f59e0b}
+.brRestore{min-height:30px;padding:2px 6px;font-size:13px}
+#brPlanState{font-size:11.5px;color:#4b5563;margin:6px 0}
+.gradeStatus{white-space:pre-line}
+
+/* ===== v11 視覺：極簡米白・細線・襯線標題（只改外觀，不動功能與輸出圖） ===== */
+:root:not(#_){
+  --ink:#fafaf7;--panel:#fafaf7;--panel2:#f3f2ee;--rule:#e4e2dd;--rule2:#cfccc5;
+  --fg:#2f2f2d;--fg2:#8c8a85;--mag:#2f2f2d;--mag2:#2f2f2d;--ok:#4f6b57;
+  --warn:#8a6a3f;--danger:#9b4a3f;--stage:#f2f1ed;--shadow:none;
+  --serif:"Cormorant Garamond","Microsoft JhengHei","Noto Sans TC","PingFang TC",sans-serif;
+  --sans:"Microsoft JhengHei","Noto Sans TC","PingFang TC",system-ui,sans-serif;
+}
+html,body{background:var(--stage)}
+body{font-family:var(--sans);font-weight:400;color:var(--fg);letter-spacing:.02em;-webkit-font-smoothing:antialiased}
+::selection{background:#e6e2d9;color:#2f2f2d}
+aside{background:var(--panel);border-right:1px solid var(--rule);scrollbar-color:#d6d3cc transparent}
+aside h1{background:var(--panel);color:var(--fg);box-shadow:none;border-bottom:1px solid var(--rule);
+  font-family:var(--serif);font-weight:400;font-size:19px;letter-spacing:.24em;padding:26px 24px 20px}
+aside h1 span{color:var(--fg2);font-family:var(--sans);font-size:10.5px;letter-spacing:.14em;margin-top:8px}
+section{margin:0;padding:22px 24px 22px;background:transparent;border:0;border-bottom:1px solid var(--rule);border-radius:0;box-shadow:none}
+section:last-child{margin-bottom:0}
+section>h2,.stepTitle{font-family:var(--serif);font-weight:400;font-size:15px;letter-spacing:.14em;color:var(--fg);margin-bottom:14px}
+section>h2 b,.stepTitle b,#psdImportSection h2 b{width:auto;height:auto;flex-basis:auto;min-width:22px;background:none;box-shadow:none;border-radius:0;
+  color:var(--fg2);font-family:var(--serif);font-size:15px;font-weight:400;letter-spacing:0;justify-content:flex-start;margin-right:6px}
+section.done>h2 b{background:none;color:var(--ok);box-shadow:none}
+.stepTitle{padding:22px 24px 0}
+.hint,.modehint,.lockhint{color:var(--fg2);font-size:12px;line-height:1.8;letter-spacing:.03em}
+.hint strong,.hint b{color:var(--fg);font-weight:500}
+.modehint{padding:0 24px 18px;border-bottom:1px solid var(--rule)}
+.modebar{padding:14px 24px 12px}
+#psdImportSection{background:transparent;border:0;border-bottom:1px solid var(--rule)}
+
+/* 按鈕：細線、直角；主要動作為墨色實心 */
+button{background:transparent;border:1px solid var(--rule2);border-radius:0;color:var(--fg);font-weight:400;letter-spacing:.08em;box-shadow:none;min-height:36px}
+button:hover:not(:disabled){background:var(--panel2);border-color:var(--fg);color:var(--fg);transform:none}
+button.go,button.go:hover:not(:disabled){background:var(--fg);border-color:var(--fg);color:#fafaf7;box-shadow:none;font-weight:400;letter-spacing:.12em}
+button.go:hover:not(:disabled){background:#000}
+button:disabled{opacity:.35;filter:none}
+.seg{border:1px solid var(--rule2);border-radius:0}
+.seg button{background:transparent;border:0;letter-spacing:.2em}
+.seg button:hover{background:var(--panel2)}
+.seg button.on{background:var(--fg);color:#fafaf7;font-weight:400}
+.tabs button.on{background:var(--fg);border-color:var(--fg);color:#fafaf7;box-shadow:none}
+.pickActions button{background:transparent;color:var(--fg);border:1px solid var(--fg);font-weight:400;min-height:44px}
+.pickActions button.on{background:var(--fg);color:#fafaf7;border-color:var(--fg)}
+.homelink{border:0;border-radius:0;padding:6px 4px;color:var(--fg2);letter-spacing:.1em}
+.homelink:hover{color:var(--fg);border:0}
+.homelink::before{content:"( "}.homelink::after{content:" )"}
+
+/* 欄位：只留底線 */
+input[type=text],input[type=number],select,textarea{background:transparent;border:0;border-bottom:1px solid var(--rule2);border-radius:0;box-shadow:none;padding:7px 4px;font-family:var(--sans);color:var(--fg)}
+textarea{border:1px solid var(--rule2)}
+input:hover,select:hover,textarea:hover{border-color:#a9a59d}
+input:focus,select:focus,textarea:focus{border-color:var(--fg);box-shadow:none}
+input[type=color]{border-radius:0;border:1px solid var(--rule2)}
+input[type=checkbox]{accent-color:#2f2f2d}
+label.f em{color:var(--fg2);font-weight:400;letter-spacing:.06em}
+
+/* 拖放區 */
+.drop{border:1px dashed var(--rule2);border-radius:0;background:transparent;color:var(--fg2);min-height:88px}
+.drop::before{background:none;color:var(--fg);font-family:var(--serif);font-size:24px;font-weight:300}
+.drop:hover,.drop.over{transform:none;border-color:var(--fg);background:var(--panel2);color:var(--fg);box-shadow:none}
+.drop b{color:var(--fg);font-weight:400;letter-spacing:.1em}
+
+/* 卡片、資訊框 → 平面細線 */
+.item,.ann,.defbox,.livePosition,.ppi,#brandInfo,.pickStatus{background:transparent;border:1px solid var(--rule);border-radius:0;box-shadow:none}
+.pickStatus{color:var(--fg2)}
+.pickStatus.active{background:var(--panel2);color:var(--fg);border-color:var(--fg)}
+.positionHeading{color:var(--fg);font-weight:500}
+.defrow b{color:var(--fg)}
+.item .sw,.swatches i{border-radius:0}
+.swatches i.on{outline-color:var(--fg)}
+.alert{background:#f6f0e6;border:1px solid #e2d3bd;border-radius:0;color:#7a5a33}
+.annotationDetails{border-top:1px solid var(--rule)}
+.annotationDetails summary{color:var(--fg2);font-weight:400;letter-spacing:.08em}
+.filelist>div{border-color:var(--rule)}
+.filelist s,.ann .x{color:var(--fg2)}
+
+/* 表格 */
+table{font-variant-numeric:tabular-nums}
+th{color:var(--fg2);font-weight:400;letter-spacing:.08em;border-color:var(--rule)}
+td{border-color:var(--rule)}
+tr.on td:first-child{color:var(--fg)}
+#positionTable tr.gradeBase,.brPreview tr.gradeBase{background:var(--panel2)}
+#positionTable tr.gradeBase td:first-child{color:var(--fg);font-weight:500}
+#positionTable tr.on{box-shadow:inset 2px 0 var(--fg)}
+#positionTable input.brManual{background:#f6f0e6;border-color:#a88b62}
+.brTips{color:#7a5a33}
+.brFlag{color:#8a6a3f}
+.gradeStatus{color:var(--ok)}.gradeStatus.error{color:var(--danger)}
+.brRestore{min-height:28px;border:0;color:var(--fg2)}
+
+/* 右側工作區 */
+main{background:var(--stage)}
+.bar{background:var(--panel);border-bottom:1px solid var(--rule);box-shadow:none}
+.bar .sel{border-left-color:var(--rule)}.bar .sel>b{color:var(--fg);font-weight:500}
+.nudge button{border-radius:0;background:transparent}
+.stage{background-color:var(--stage);background-image:none}
+#sheet{border-radius:0;box-shadow:0 0 0 1px var(--rule)}
+.empty{background:transparent;border:1px solid var(--rule);border-radius:0;backdrop-filter:none;color:var(--fg2)}
+.empty strong{font-family:var(--serif);font-weight:400;letter-spacing:.12em;color:var(--fg)}
+
+/* 使用說明 */
+.ovl{background:rgba(242,241,237,.9)}
+.guide{background:var(--panel);border:1px solid var(--rule);border-radius:0;box-shadow:none}
+.guide header h3{font-family:var(--serif);font-weight:400;font-size:22px;letter-spacing:.2em}
+.gstep{border-bottom:1px solid var(--rule)}
+.gstep b.num{background:none;color:var(--fg2);border-radius:0;font-family:var(--serif);font-size:17px;font-weight:400}
+.gstep h4{font-weight:500;letter-spacing:.06em}
+dialog,.psdWizard{border-radius:0!important;border:1px solid var(--rule)!important;background:var(--panel)!important;box-shadow:none}
+.bar .tip,.zoomHelp{color:var(--fg2)!important}
+#bridgeStatus{color:var(--ok)!important}
+#guideSelected{color:var(--fg)!important}
+.unit i{color:var(--fg2)}
+/* v14 標題加強 */
+aside h1{font-size:21px;font-weight:700;letter-spacing:.14em;color:#1f1f1d}
+section>h2,.stepTitle{font-size:16.5px;font-weight:700;letter-spacing:.08em;color:#1f1f1d;margin-bottom:16px}
+section>h2 b,.stepTitle b,#psdImportSection h2 b{font-size:21px;font-weight:500;color:#1f1f1d;min-width:26px}
+.annotationDetails summary,#positionTable th,th{color:#5f5d58}
+.guide header h3{font-size:24px;font-weight:700;letter-spacing:.12em;color:#1f1f1d}
+.gstep h4{font-size:14px;font-weight:700;color:#1f1f1d}
+.gstep b.num{font-size:20px;font-weight:500;color:#1f1f1d}
+.empty strong{font-weight:700;color:#1f1f1d}
+
+/* v16 共用導覽列（三頁一致） */
+.toolnav{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 22px;font:500 12px/1.6 "Microsoft JhengHei","Noto Sans TC","PingFang TC",system-ui,sans-serif;letter-spacing:.1em}
+.toolnav a{color:#8c8a85;text-decoration:none;border-bottom:1px solid transparent;padding-bottom:1px;white-space:nowrap}
+.toolnav a:hover{color:#1f1f1d;border-bottom-color:#1f1f1d}
+.toolnav a[aria-current=page]{color:#1f1f1d;font-weight:700;border-bottom-color:#1f1f1d}
+.toolnav .home::before{content:"( "}.toolnav .home::after{content:" )"}
+.toolnav .no{font-family:"Cormorant Garamond","Microsoft JhengHei",serif;font-size:14px;font-weight:500;margin-right:6px;letter-spacing:0}
+
+aside>.toolnav{padding:20px 24px 0;gap:4px 16px}
+aside>.toolnav+h1{padding-top:12px}
+/* v16 殘留彩色清理 */
+#bridgeStatus{color:var(--ok)!important}
 </style></head><body>
 
 <aside>
+  <nav class="toolnav" aria-label="工具切換"><a href="./" class="home">← 首頁</a><a href="pattern.html"><span class="no">01</span>版片 PNG 匯出器</a><a href="placement.html" aria-current="page"><span class="no">02</span>印圖定位產生器</a></nav>
   <h1>印圖定位產生器<span>PSD 匯入 · 多印圖 · 動態標註 · PNG／分圖層 PSD</span></h1>
 
 <section id="psdImportSection">
- <h2><b>＋</b>開啟 Photoshop 舊檔</h2>
- <p class="hint">匯入 PSD 後接回下方原有定位功能，拖動印圖時，新的標註線與數字會同步更新。</p>
- <button id="openLegacyPsd" class="go" style="width:100%;min-height:44px">開啟 PSD／定位專案</button>
+ <h2><b>＋</b>開啟舊檔／儲存專案</h2>
+ <p class="hint">已有 PSD 或存過的定位專案才需要；新款直接從步驟 1 開始。</p>
+ <button id="openLegacyPsd" style="width:100%;min-height:40px">開啟 PSD／定位專案</button>
  <input id="legacyFile" type="file" accept=".psd,.json" hidden="">
  <div class="fillrow"><button id="savePlacement" disabled="">儲存可編輯專案</button><button id="legacyOriginal" disabled="">查看匯入原稿</button></div>
- <p class="hint" id="legacyStatus" role="status" aria-live="polite" style="margin-top:10px;margin-bottom:0">也可以沿用下方的版片 PNG＋印圖流程。</p>
- <p class="hint" style="margin:8px 0 0;font-size:11px">下次繼續調整請儲存「可編輯專案」；下載 PSD 供 Photoshop 使用。此版先支援 RGB／8 位元、無群組、印圖與版片分層的橫排定位稿。</p>
+ <p class="hint" id="legacyStatus" role="status" aria-live="polite" style="margin-top:10px;margin-bottom:0">下次要繼續改，請按「儲存可編輯專案」。</p>
 </section>
 
+  <p class="stepTitle"><b>1</b>上身／下身</p>
   <div class="modebar">
     <div class="seg" id="modeSeg">
       <button data-m="upper" class="on">上身</button>
@@ -279,8 +433,8 @@ body{min-width:0}main{min-height:0}.bar{flex-shrink:0;flex-wrap:wrap;overflow:vi
   <p class="modehint" id="modeHint"></p>
 
   <section id="s1">
-    <h2><b>1</b>導入版片</h2>
-    <p class="hint">尺碼從檔名自動辨識，紅色 CF 線與解析度自動讀取。單一尺碼出圖就放一張。</p>
+    <h2><b>2</b>導入版片</h2>
+    <p class="hint">建議從「版片 PNG 匯出器」直接送過來（尺碼、比例自動帶入）；也可拖曳 PNG，尺碼寫在檔名結尾。</p>
     <div id="bridgeStatus" role="status" aria-live="polite" style="margin:8px 0;color:#176c66;font-size:12px;line-height:1.7"></div>
 <dialog id="bridgeChoice" aria-labelledby="bridgeChoiceTitle" style="border:1px solid #d8dfe9;border-radius:16px;padding:24px;max-width:480px;color:#213547">
  <h3 id="bridgeChoiceTitle" style="margin-top:0">收到 pattern 的版片</h3>
@@ -304,15 +458,24 @@ body{min-width:0}main{min-height:0}.bar{flex-shrink:0;flex-wrap:wrap;overflow:vi
     </details>
   </section>
 
+  <section id="s6" data-fold="1" class="locked">
+    <h2><b>3</b>版片底色</h2>
+    <p class="lockhint">放好版片後開放</p>
+    <div class="swatches" id="swatches"></div>
+    <div class="swrow"><input type="color" id="fillPick" value="#1B2A5B"><input type="text" id="fillColor" value="#1B2A5B"></div>
+    <label class="f" style="display:flex;gap:8px;align-items:center;margin-top:10px">
+      <input type="checkbox" id="doFill" checked="" style="width:auto"><em style="margin:0">填入版片底色</em>
+    </label>
+  </section>
   <section id="s2">
-    <h2><b>2</b>導入印圖</h2>
-    <p class="hint">導入後自動顯示在版片上，可立即拖曳。可放多個印圖；尺寸在步驟 5 統一調整。</p>
+    <h2><b>4</b>導入印圖</h2>
+    <p class="hint">導入後自動顯示在版片上，可立即拖曳。可放多個印圖；尺寸在步驟 6 統一調整。</p>
     <div class="drop" id="dropArt"><b>拖曳印圖 PNG</b>可多選</div>
     <div id="artSummary" role="status">尚未導入印圖</div>
   </section>
 
   <section id="s3" data-fold="1">
-    <h2><b>3</b>確認尺寸比例</h2>
+    <h2><b>5</b>確認尺寸比例</h2>
     <label class="f"><em>尺寸單位</em>
       <select id="unit">
         <option value="in">吋 inch（分數顯示，如 2 1/4"）</option>
@@ -331,10 +494,23 @@ body{min-width:0}main{min-height:0}.bar{flex-shrink:0;flex-wrap:wrap;overflow:vi
     <button id="toggleManual" style="width:100%;margin-top:6px">手動指定解析度</button>
   </section>
 
-  <section id="s4" class="locked" style="top: 2px;">
-    <h2><b>4</b>先定位基準碼，再調整其他尺碼</h2>
+  <section id="sSizing" class="locked">
+    <h2><b>6</b>調整印圖尺寸（基碼）</h2>
     <p class="lockhint">導入版片與印圖後即可操作</p>
-    <p class="hint"><b>①&nbsp;</b><strong>選擇基準碼，拖曳印圖到大約位置</strong><br>先把印圖放到接近目標的位置，不需要一次放得很精準。<b>&nbsp;<br><br>②&nbsp;</b><strong> 點選「量測」，確認距離</strong><br>點一下基準線，再點印圖邊緣，即可量測兩者距離。<br>也可以反過來點選。<b><br><br>③&nbsp;</b><strong>依量測結果微調印圖位置</strong><br>如果位置還有差異，再用拖曳或方向鍵進行小幅調整。</p>
+    <p class="hint"><strong>用「寬 W」設定 100% 時的印圖大小。</strong>品牌規範的 90%／110% 等都以這個寬度為準，在步驟 8 自動帶入。</p>
+        <div id="listArt" style="margin-top:10px"></div>
+    <details class="annotationDetails" style="margin-top:10px"><summary>進階：逐碼縮放／角度、重置位置</summary>
+    <p class="hint">各尺碼縮放一般在步驟 8 由品牌規範帶入，這裡只在特殊情況使用。</p>
+    <p class="hint" id="sizingActive">先選取要調整的印圖</p>
+    <table id="grid"><thead><tr><th>尺碼</th><th>縮放 %</th><th>寬 W</th><th>高 H</th></tr></thead><tbody></tbody></table>
+    <div class="fillrow"><button id="fillDown">第一列比例套用全部</button><button id="clearItem">重置此印圖位置</button></div>
+    </details>
+  </section>
+  <section id="s4" class="locked" style="top: 2px;">
+    <h2><b>7</b>基碼定位</h2>
+    <p class="lockhint">導入版片與印圖後即可操作</p>
+    <p class="hint">① 選基碼，把印圖拖到位置　② 按「垂直／水平距離」，點基準與印圖邊　③ 拖曳或方向鍵微調</p>
+    <p class="hint" style="margin-top:-4px">垂直基準建議點<b>「領下中心（CF）」</b>、<b>CF 紅線上任一點</b>或<b>綠色的 CF 交點</b>：這些點固定在前中心，印圖左右移動也不會跑掉。「版片上緣（印圖正上方）」會跟著印圖位置變動。</p>
     <div class="tabs" id="itemTabs"></div>
     <div class="gradeBaseRow"><label for="gradeBaseSize">基碼</label><select id="gradeBaseSize" aria-label="選擇基碼"></select><button id="gradeFocusBase">編輯基碼</button></div>
     <div class="fillrow pickActions">
@@ -343,17 +519,12 @@ body{min-width:0}main{min-height:0}.bar{flex-shrink:0;flex-wrap:wrap;overflow:vi
     </div>
     <div class="pickStatus" id="pickStatus" role="status" aria-live="polite"><strong>怎麼量？</strong><br>先點基準線，再點印圖邊緣，即可看到距離。<br>可選擇外框、中心線或內部線作為基準。</div>
     <button id="cancelPick" hidden="" style="width:100%;margin-top:6px">取消點選（Esc）</button>
-    <p class="hint" style="position: relative; top: 5px; left: 3px; box-sizing: border-box; width: 317px;"><strong>使用內部線定位</strong><br>新版 Pattern 會保留內部線座標，可直接作為水平或垂直量測基準。<br>若使用 PNG／PSD，也可以手動畫一條方向線建立基準。</p><div class="defbox livePosition">
+    <div class="defbox livePosition">
       <div class="positionHeading" id="positionHeading">尚未選取印圖</div>
       <div class="defrow"><b>垂直</b><span id="defV">尚未點選量測</span></div>
       <div class="defrow"><b>水平</b><span id="defH">尚未點選量測</span></div>
     </div>
     <div class="gradeRefs" id="gradeRefs" hidden=""><label class="f"><em>採用的垂直定位標註</em><select id="gradeRefV"></select></label><label class="f"><em>採用的水平定位標註</em><select id="gradeRefH"></select></label></div>
-    <button class="go gradeApply" id="gradeApplyAll" disabled="">將基碼位置套用全部尺碼</button>
-    <p class="hint" id="gradeApplyHint">垂直或水平標註其中一個即可；未標註方向保持原位置。</p>
-    <p class="gradeStatus" id="gradeStatus" role="status" aria-live="polite"></p>
-    <details class="positionDetails" open=""><summary>各尺碼定位（可手動輸入）</summary><p class="hint" id="gradeInputHint">輸入後按 Enter 或離開欄位套用。</p><div class="tableScroll"><table id="positionTable"><thead><tr><th>尺碼</th><th>垂直距離</th><th>水平距離</th></tr></thead><tbody id="positionRows"></tbody></table></div></details>
-    <button id="gradeUndo" disabled="" style="width:100%;margin-top:6px">復原上次定位調整</button>
     <div class="alert" id="fitWarn" hidden=""></div>
     <details class="annotationDetails" id="guidePanel">
  <summary>進階：逐碼旋轉・依記號線對齊（斜放印圖才需要）</summary>
@@ -379,8 +550,9 @@ body{min-width:0}main{min-height:0}.bar{flex-shrink:0;flex-wrap:wrap;overflow:vi
 <details class="annotationDetails"><summary>標註樣式與進階設定</summary>
       <p class="hint">可調整顏色、鏡像和標註線位置；距離預設自動計算。若覆寫文字，該文字不會隨拖曳更新。</p>
       <label class="f"><em>標註顏色（線與數字同色，全部標註一起變更）</em><div class="swrow"><input type="color" id="annoColor" value="#C026D3"><input type="text" id="annoColorT" value="#C026D3" aria-label="標註顏色色碼"></div></label>
-      <label class="f" style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="hpsLine" style="width:auto"><em style="margin:0">顯示基準線</em></label>
-      <div class="two" id="hpsOpts" hidden="">
+      <label class="f" style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="hpsLine" checked="" style="width:auto"><em style="margin:0">顯示基準線（會延伸到量測線）</em></label>
+      <label class="f" style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="hpsSameColor" checked="" style="width:auto"><em style="margin:0">基準線與標註同色</em></label>
+      <div class="two" id="hpsOpts">
         <label class="f"><em>基準線寬度</em><span class="unit"><input type="number" id="hpsW" value="6" step="0.5"><i class="uL"></i></span></label>
         <label class="f"><em>顏色</em><div class="swrow"><input type="color" id="hpsColor" value="#E8D400"><input type="text" id="hpsColorT" value="#E8D400"></div></label>
       </div>
@@ -393,18 +565,29 @@ body{min-width:0}main{min-height:0}.bar{flex-shrink:0;flex-wrap:wrap;overflow:vi
       <button id="autoAnno">依定位自動產生標註</button><input type="checkbox" id="autoAnnoOn">
     </div>
   </section>
-  <section id="sSizing" class="locked" style="box-sizing: border-box; width: 362px;">
-    <h2><b>5</b>調整印圖尺寸</h2>
-    <p class="lockhint">先選取要調整的印圖，再輸入尺寸或縮放比例。</p>
-    <p class="hint"><p><strong>兩種調整方式：</strong></p><ul><li>輸入 <strong>寬 W</strong>：高度會等比例縮放</li><li>輸入 <strong>縮放 %</strong>：依比例放大或縮小</li></ul><p>調整尺寸時，<strong>印圖中心位置不會移動</strong>。<br>如果要修改印圖位置，可直接拖曳，或回到步驟 4 重新定位。</p></p>
-    <div id="listArt" style="margin-top:10px"></div>
-    <p class="hint" id="sizingActive">先選取要調整的印圖</p>
-    <table id="grid"><thead><tr><th>尺碼</th><th>縮放 %</th><th>寬 W</th><th>高 H</th></tr></thead><tbody></tbody></table>
-    <div class="fillrow"><button id="fillDown">第一列比例套用全部</button><button id="clearItem">重置此印圖位置</button></div>
-  </section>
 
-  <section id="s5" data-fold="1" class="locked">
-    <h2><b>6</b>文字與底部</h2>
+  <section id="sBrand" class="locked">
+    <h2><b>8</b>品牌跳檔：自動帶入 → 手動微調</h2>
+    <p class="lockhint">導入版片與印圖、完成基碼定位後操作</p>
+    <p class="hint">規範只是參考預設值。按「套用」才會寫入；之後可在下表逐碼改縮放與距離。</p>
+    <div class="two">
+      <label class="f"><em>品牌</em><select id="brandSel" aria-label="品牌"></select></label>
+      <label class="f"><em>客群</em><select id="groupSel" aria-label="客群"></select></label>
+    </div>
+    <div id="brandInfo"></div>
+    <label class="f" style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="brFollowH" checked="" style="width:auto"><em style="margin:0">水平方向也跟著跳（印圖對齊 CF 中心時請關閉）</em></label>
+    <button class="go gradeApply" id="gradeApplyAll" disabled="">將基碼位置套用全部尺碼</button>
+    <button id="brApplyItems" hidden="" style="width:100%;margin-top:6px">同一規範套用全部印圖</button>
+    <p class="hint" id="gradeApplyHint">垂直或水平標註其中一個即可；未標註方向保持原位置。</p>
+    <p class="gradeStatus" id="gradeStatus" role="status" aria-live="polite"></p>
+    <p id="brPlanState" role="status"></p>
+    <details class="positionDetails" open=""><summary>各尺碼跳值（可手動輸入）</summary><p class="hint" id="gradeInputHint">輸入後按 Enter 或離開欄位套用。</p><div class="tableScroll"><table id="positionTable"><thead><tr><th>尺碼</th><th>縮放 %</th><th>垂直距離</th><th>水平距離</th><th></th></tr></thead><tbody id="positionRows"></tbody></table></div></details>
+    <button id="gradeUndo" disabled="" style="width:100%;margin-top:6px">復原上次定位調整</button>
+    <p class="hint" id="brFiles" style="font-size:11px;margin:10px 0 0;overflow-wrap:anywhere"></p>
+    <textarea id="brandPlanJson" hidden=""></textarea>
+  </section>
+  <section id="s5" class="locked">
+    <h2><b>9</b>標題與文字</h2>
     <p class="lockhint">放好版片後開放</p>
     <label class="f"><em>主標題（圖號）</em><input type="text" id="title" placeholder="1200686"></label>
     <label class="f"><em>後綴小字</em><input type="text" id="subtitle" value="(No seam allowance)"></label>
@@ -415,21 +598,15 @@ body{min-width:0}main{min-height:0}.bar{flex-shrink:0;flex-wrap:wrap;overflow:vi
     <label class="f" style="display:flex;gap:8px;align-items:center">
       <input type="checkbox" id="autoFoot" checked="" style="width:auto"><em style="margin:0">列出各尺碼群組的縮放與 W／H</em>
     </label>
+    <label class="f" style="display:flex;gap:8px;align-items:center">
+      <input type="checkbox" id="brAutoNote" checked="" style="width:auto"><em style="margin:0">套用規範時，底部備註自動加入「品牌 客群｜基碼」</em>
+    </label>
     <label class="f"><em>底部備註（每行一則）</em><textarea id="footNote" rows="2"></textarea></label>
   </section>
 
-  <section id="s6" data-fold="1" class="locked">
-    <h2><b>7</b>版片底色</h2>
-    <p class="lockhint">放好版片後開放</p>
-    <div class="swatches" id="swatches"></div>
-    <div class="swrow"><input type="color" id="fillPick" value="#1B2A5B"><input type="text" id="fillColor" value="#1B2A5B"></div>
-    <label class="f" style="display:flex;gap:8px;align-items:center;margin-top:10px">
-      <input type="checkbox" id="doFill" checked="" style="width:auto"><em style="margin:0">填入版片底色</em>
-    </label>
-  </section>
 
   <section id="s7" data-fold="1" class="locked">
-    <h2><b>8</b>版面</h2>
+    <h2><b>10</b>版面</h2>
     <p class="lockhint">放好版片後開放</p>
     <label class="f"><em>版片對齊（各尺碼排列基準）</em>
       <select id="patAlign">
@@ -460,7 +637,6 @@ body{min-width:0}main{min-height:0}.bar{flex-shrink:0;flex-wrap:wrap;overflow:vi
 
 <main>
   <div class="bar">
-    <a href="./" class="homelink" title="回首頁">← 首頁</a>
     <button class="go" id="render" disabled="">更新預覽</button>
     <button id="dlPng" disabled="">下載 PNG</button>
     <button id="dlPsd" disabled="">下載可編輯 PSD</button><p class="hint">PSD：標題／尺碼／標註數字可直接打字修改；印圖是各尺碼獨立的智慧型物件，可雙擊編輯或替換。版片與標註線另分層。原印圖內已合併的文字不會還原；在 PS 移動印圖後，標註數字不會自動重算。要保留網站的動態定位，請另存可編輯專案。</p>
@@ -492,15 +668,16 @@ body{min-width:0}main{min-height:0}.bar{flex-shrink:0;flex-wrap:wrap;overflow:vi
   <div class="guide">
     <header>
       <h3>印圖定位產生器</h3>
-      <p>先拖曳基碼定位，點選兩個邊建立量測，再套用到全部尺碼，最後逐尺碼輸入定位距離。尺寸與比例也可手動調整。</p>
+      <p>先定好基碼的印圖大小與位置，再選品牌自動帶入跳檔參考值，最後逐尺碼手動微調。規範只是預設值，不強制。</p>
     </header>
     <div class="body">
-      <div class="gstep"><b class="num">1</b><div><h4>導入版片</h4><p>放入各尺碼 PNG，尺碼可在檔名結尾指定。</p></div></div>
-      <div class="gstep"><b class="num">2</b><div><h4>導入印圖，立即預覽</h4><p>印圖會先放在版片上，直接拖曳到大致位置；可放多個印圖。</p></div></div>
-      <div class="gstep"><b class="num">3</b><div><h4>確認尺寸比例</h4><p>核對版片解析度與單位。缺少 DPI 的 PNG 會先用暫估比例預覽；請手動確認解析度後再匯出。</p></div></div>
-      <div class="gstep"><b class="num">4</b><div><h4>基碼定位 → 全部套用 → 逐碼微調</h4><p>選擇基碼（預設優先 M），拖曳印圖定位置。用「垂直／水平標註」依序點印圖邊、版片邊，再按「將基碼位置套用全部尺碼」。套用的是距離，不是畫布座標，且不改尺寸比例。之後在各尺碼距離欄輸入數字，按 Enter 或離開欄位套用；吋可填 1 3/4 或 1.75。拖曳和數字輸入都會同步更新標註。</p></div></div>
-      <div class="gstep"><b class="num">5</b><div><h4>輸入尺寸與比例</h4><p>輸入基準寬 W，或逐尺碼縮放 %；高度等比例連動，中心位置不變。可再回到预覽拖曳調整。</p></div></div>
-      <div class="gstep"><b class="num">6</b><div><h4>文字、底色、版面與匯出</h4><p>其他設定沿用原有功能。滾輪或＋／－縮放，空白鍵加拖曳平移。需下次繼續編輯時儲存定位專案；PSD 匯入與分層匯出也保留。</p></div></div>
+      <div class="gstep"><b class="num">1</b><div><h4>上身／下身 → 導入版片 → 底色</h4><p>先選上身或下身。版片建議由「版片 PNG 匯出器」送入，尺碼與比例會自動帶入；也可拖曳 PNG（尺碼寫在檔名結尾）。</p></div></div>
+      <div class="gstep"><b class="num">2</b><div><h4>導入印圖 → 確認尺寸比例</h4><p>印圖會先放在版片上。核對版片與印圖解析度；缺少 DPI 時請手動指定後再匯出。</p></div></div>
+      <div class="gstep"><b class="num">3</b><div><h4>調整印圖尺寸（基碼）</h4><p>輸入基碼的印圖寬 W 或縮放 %；高度等比例連動。</p></div></div>
+      <div class="gstep"><b class="num">4</b><div><h4>基碼定位</h4><p>選基碼，拖曳印圖到位置，用「垂直／水平距離」依序點基準線與印圖邊建立量測。</p></div></div>
+      <div class="gstep"><b class="num">5</b><div><h4>品牌跳檔：自動帶入 → 手動微調</h4><p>選品牌與客群，確認預計跳值後按「套用」。位移以「按圖稿」段為 0，往外每碼累加，垂直、水平都跳（對齊中心的印圖可關閉水平）。之後在表格逐碼修改；橘色 = 與規範不同，按 ↺ 回復。</p></div></div>
+      <div class="gstep"><b class="num">6</b><div><h4>標題、版面與匯出</h4><p>填入圖號與備註（可自動加入品牌／基碼），調整版面後匯出 PNG／PSD，或儲存可編輯專案。</p></div></div>
+      
     </div>
     <footer>
       <label><input type="checkbox" id="guideSkip"> 下次不要顯示</label>
@@ -708,7 +885,7 @@ function originOf(p,px,py){
   return {oX:px+X,oY:py+(vFrom()==="bottom"?p.by1:p.by0)};
 }
 const cvs=(w,h)=>{const c=document.createElement("canvas");c.width=Math.max(1,Math.ceil(w));c.height=Math.max(1,Math.ceil(h));return c;};
-function parseSize(n){const b=n.replace(/\.[^.]+$/,"");return (b.split(/[-_ ]/).filter(Boolean).pop()||b).toUpperCase();}
+function parseSize(n){const b=n.replace(/\.[^.]+$/,"");const kid=b.match(/(?:^|[_ ])(\d{1,2})-(\d{1,2})$/);if(kid)return kid[1]+'/'+kid[2];return (b.split(/[-_ ]/).filter(Boolean).pop()||b).toUpperCase();}
 function sizeRank(s){
   const t=String(s||"").toUpperCase().replace(/[\s_-]/g,"");
   if(t==="M"||t==="MED"||t==="MEDIUM")return 0;
@@ -718,6 +895,7 @@ function sizeRank(s){
   if((m=t.match(/^(X*)L$/)))            return m[1].length+1;      // L,XL,XXL,XXXL,XXXXL
   if((m=t.match(/^(\d+)XL$/)))          return +m[1]+1;            // 2XL,3XL,4XL
   if((m=t.match(/^(\d+)X$/)))           return +m[1]+3;            // 1X,2X,3X,4X（大尺碼線）
+  if((m=t.match(/^(\d{1,2})\/(\d{1,2})$/)))return 50+(+m[1]);    // 童裝 5/6、7/8…
   if(/^\d+(\.\d+)?$/.test(t))          return 100+parseFloat(t);  // 數字尺碼（腰圍等）
   const i=SIZE_ORDER.indexOf(t);
   return i===-1?900:i-10;
@@ -842,8 +1020,9 @@ function analysePattern(img){
     if(topY[q]<0)topY[q]=y; botY[q]=y;
     if(leftX[y]<0)leftX[y]=q; rightX[y]=q;}
   if(bx1<bx0){bx0=0;bx1=w-1;by0=0;by1=h-1;}
+  const redFound=top>=0;
   if(top<0){cfx=Math.round((bx0+bx1)/2);top=by0;bot=by1;}
-  return {img,w,h,cfx,hpsY:top,hemY:bot,cfPx:bot-top,bx0,bx1,by0,by1,topY,botY,leftX,rightX,
+  return {img,w,h,cfx,redFound,hpsY:top,hemY:bot,cfPx:bot-top,bx0,bx1,by0,by1,topY,botY,leftX,rightX,
           filled:null,filledColor:null,fillPx:null};
 }
 function buildFilled(pat,color){
@@ -954,9 +1133,9 @@ hookDrop($("#dropArt"),async files=>{
 function drawPatList(){
   $("#listPat").innerHTML=state.pats.map((p,i)=>
     `<div><span style="display:flex;align-items:center;gap:5px;min-width:0">
-       <input value="${p.size}" data-i="${i}" data-k="size" style="width:52px;padding:2px 5px;font-size:11.5px;font-weight:600">
-       <input value="${p.panel||"1"}" data-i="${i}" data-k="panel" title="片別" style="width:52px;padding:2px 5px;font-size:11.5px">
-       <span style="color:#5f6f7f;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.name}</span></span>
+       <input value="${flowEscape(p.size)}" data-i="${i}" data-k="size" style="width:52px;padding:2px 5px;font-size:11.5px;font-weight:600">
+       <input value="${flowEscape(p.panel||"1")}" data-i="${i}" data-k="panel" title="片別" style="width:52px;padding:2px 5px;font-size:11.5px">
+       <span style="color:var(--fg2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${flowEscape(p.name)}</span></span>
      <span>${p.dpi?"":'<span class="badno">無 DPI</span>'} <s data-i="${i}">✕</s></span></div>`).join("");
   $("#listPat").querySelectorAll("input[data-k]").forEach(el=>el.onchange=()=>{
     const p=state.pats[+el.dataset.i];
@@ -986,8 +1165,8 @@ function drawItemList(){
     <div class="item" data-id="${it.id}">
       <div class="hd">
         <span class="sw" style="background-image:url(${it.canvas.toDataURL()})"></span>
-        <input class="nm" type="text" value="${it.name}" data-k="name" style="padding:3px 6px">
-        <s data-del="${it.id}" style="color:#e0575c;cursor:pointer">✕</s>
+        <input class="nm" type="text" value="${flowEscape(it.name)}" data-k="name" style="padding:3px 6px">
+        <s data-del="${it.id}" style="color:var(--fg2);cursor:pointer;text-decoration:none" title="刪除">✕</s>
       </div>
       <div class="rw">
         <label>W <input type="number" step="${U().dec==null?0.01:(U().n==="mm"?0.5:0.05)}" value="${uIn(it.W)}" data-k="W"> <span class="uW"></span></label>
@@ -1018,7 +1197,7 @@ function drawItemList(){
 }
 function buildTabs(){
   $("#itemTabs").innerHTML=state.items.map(it=>
-    `<button data-id="${it.id}" class="${it.id===state.active?"on":""}">${it.name}</button>`).join("")
+    `<button data-id="${it.id}" class="${it.id===state.active?"on":""}">${flowEscape(it.name)}</button>`).join("")
     ||`<span class="hint" style="margin:0">尚未放入印圖</span>`;
   $("#itemTabs").querySelectorAll("button").forEach(b=>b.onclick=()=>{
     state.pick=null;select(flowSize(),b.dataset.id);buildTabs();buildGrid();render();});
@@ -1040,7 +1219,7 @@ function calc(){
     const bad=state.items.filter(it=>!it.W||it.W<=0);
     if(bad.length){ok=false;if(!warn)warn=`<b>${bad.map(b=>b.name).join("、")} 缺實際寬度。</b>手動在印圖卡片填 W。`;}
     else note+=`${note?"<br>":""}印圖 ${state.items.length} 個：`+
-      state.items.map(it=>`<b>${it.name}</b> ${fmtPlain(it.W)} × ${fmtPlain(it.W*it.aspect)}`).join("　");
+      state.items.map(it=>`<b>${flowEscape(it.name)}</b> ${fmtPlain(it.W)} × ${fmtPlain(it.W*it.aspect)}`).join("　");
   }
   if(ok&&uniq.length&&state.pats[0].fillPx!=null&&$("#doFill").checked)
     note+=`<br>底色填入 <b>${(state.pats[0].fillPx/(state.pats[0].w*state.pats[0].h)*100).toFixed(0)}%</b> 版片面積`;
@@ -1105,7 +1284,7 @@ function refOptions(kind){
   const low=isLower();
   if(kind==="v"){
     o.push(["hps",low?(vFrom()==="bottom"?"褲口（基準）":"腰圍線（基準）"):"領縫下中心 HPS"],
-           ["ptop","版片上緣"],["pbot","版片下緣"],["redtop","紅線上端"]);
+           ["ptop","版片上緣（印圖正上方）"],["pbot","版片下緣"],["redtop","領下中心（CF）"]);
     if(!low)o.push(["hem","下襬（紅線底端）"]);
   }else{
     o.push(["cf",low?sideName()+"（基準）":"前中心 CF"],
@@ -1277,7 +1456,7 @@ function buildAnnUI(){
       <div class="r">
         <label style="display:flex;align-items:center;gap:4px;font-size:11.5px;color:var(--fg2);white-space:nowrap">
           <input type="checkbox" data-k="mirror" ${a.mirror?"checked":""} style="width:auto">鏡像</label>
-        <input type="text" data-k="label" value="${a.label||""}" placeholder="數字自動，可覆寫" style="flex:1">
+        <input type="text" data-k="label" value="${flowEscape(a.label||"")}" placeholder="數字自動，可覆寫" style="flex:1">
       </div>
       <div class="note" data-note="${a.id}"></div>
     </div>`;
@@ -1338,7 +1517,7 @@ function annoPreview(a){
     if(ref==="pright")return "版片右緣";
     if(ref==="pcx")return "版片中心";
     if(ref==="redline")return "紅線";
-    if(ref==="redtop")return "紅線上端";
+    if(ref==="redtop")return "領下中心";
     if(ref==="cf")return isLower()?sideShort():"CF";
     const [id,part]=String(ref).split(":");
     const o=state.items.find(z=>z.id===id);
@@ -1366,11 +1545,11 @@ function updateAnnNotes(){
     }
     if(r.match){
       el.classList.add("ok");
-      el.innerHTML=`${r.size}：${r.what} = <b>${fmt(r.measured)}</b>　與步驟 4 ${r.key} ${fmt(r.step4)} 一致`;
+      el.innerHTML=`${r.size}：${r.what} = <b>${fmt(r.measured)}</b>　與步驟 7 ${r.key} ${fmt(r.step4)} 一致`;
     }else{
       el.classList.add("warn");
       el.innerHTML=`${r.size}：${r.what} = <b>${fmt(r.measured)}</b>`+
-        `<br>步驟 4 ${r.key} 是 ${fmt(r.step4)}，量到的不是同一點，確認這是你要的`;
+        `<br>步驟 7 ${r.key} 是 ${fmt(r.step4)}，量到的不是同一點，確認這是你要的`;
     }
   });
 }
@@ -2153,7 +2332,7 @@ function flowDraft(){
  const draft=!manualOn()&&(state.pats.some(p=>!p.dpi)||state.items.some(it=>!it.dpi));
  const invalidManual=manualOn()&&(!(Number($('#manPat').value)>0)||!(Number($('#manArt').value)>0));
  state.previewOnly=draft||invalidManual;
- if(draft&&state.pats.length&&state.items.length){$('#calAlert').hidden=false;$('#calAlert').textContent='有 PNG 缺少 DPI：目前暫用版片 72 DPI／印圖 300 DPI 顯示，可先拖曳。請按「手動指定解析度」確認實際比例後再匯出，並在步驟 5 核對印圖寬度。';$('#s3').classList.remove('closed');}
+ if(draft&&state.pats.length&&state.items.length){$('#calAlert').hidden=false;$('#calAlert').textContent='有 PNG 缺少 DPI：目前暫用版片 72 DPI／印圖 300 DPI 顯示，可先拖曳。請按「手動指定解析度」確認實際比例後再匯出，並在步驟 6 核對印圖寬度。';$('#s3').classList.remove('closed');}
  if(invalidManual){$('#calAlert').hidden=false;$('#calAlert').textContent='請填入大於 0 的版片與印圖 DPI，再匯出。';}
  if(draft||invalidManual||state.pick||!state.ok){$('#dlPng').disabled=true;$('#dlPsd').disabled=true;}
 }
@@ -2203,7 +2382,7 @@ artReplaceInput.onchange=async()=>{
   delete it.variants;
   state.active=id;state.pick=null;placementDirty=true;
   drawItemList();buildTabs();buildGrid();buildAnnUI();calc();ready();refreshSel();repaint();
-  flowMessage(`已換成「${it.name}」：各尺碼中心位置、縮放與角度保留，標註自動更新。${dpi||manualOn()?'':'此 PNG 無 DPI，寬度暫以 300 DPI 計算，請於步驟 5 核對。'}${hadVariants?'原 PSD 各尺碼的個別印圖已改為同一張新印圖。':''}`);
+  flowMessage(`已換成「${it.name}」：各尺碼中心位置、縮放與角度保留，標註自動更新。${dpi||manualOn()?'':'此 PNG 無 DPI，寬度暫以 300 DPI 計算，請於步驟 6 核對。'}${hadVariants?'原 PSD 各尺碼的個別印圖已改為同一張新印圖。':''}`);
  }catch(e){console.error(e);flowMessage('無法讀取這張圖片，請改用 PNG。');}
 };
 const flowDrawItems=drawItemList;drawItemList=function(){
@@ -2211,13 +2390,13 @@ const flowDrawItems=drawItemList;drawItemList=function(){
  $('#listArt').querySelectorAll('[data-del]').forEach(el=>el.onclick=()=>deleteArtItem(el.dataset.del));
  const box=$('#artSummary');
  if(!state.items.length){box.textContent='尚未導入印圖';return;}
- box.innerHTML=`<div style="margin-bottom:8px">已導入 ${state.items.length} 個印圖。右側拖曳定位；步驟 5 輸入尺寸。</div>`+state.items.map(it=>`
+ box.innerHTML=`<div style="margin-bottom:8px">已導入 ${state.items.length} 個印圖。右側拖曳定位；步驟 6 輸入尺寸。</div>`+state.items.map(it=>`
   <div class="item" data-art="${flowEscape(it.id)}" style="padding:8px 10px;margin-bottom:6px">
    <div class="hd" style="margin:0">
     <span class="sw" style="background-image:url(${it.canvas.toDataURL()})"></span>
     <span class="nm" title="${flowEscape(it.name)}">${flowEscape(it.name)}</span>
     <button type="button" data-art-replace="${flowEscape(it.id)}" style="min-height:30px;padding:4px 9px">換圖</button>
-    <button type="button" data-art-delete="${flowEscape(it.id)}" aria-label="刪除 ${flowEscape(it.name)}" style="min-height:30px;padding:4px 9px;color:#c23b47;border-color:#efc3c8">刪除</button>
+    <button type="button" data-art-delete="${flowEscape(it.id)}" aria-label="刪除 ${flowEscape(it.name)}" style="min-height:30px;padding:4px 9px;color:#9b4a3f;border-color:#dcc9c4">刪除</button>
    </div>
   </div>`).join('');
  box.querySelectorAll('[data-art-replace]').forEach(b=>b.onclick=()=>replaceArtItem(b.dataset.artReplace));
@@ -2246,8 +2425,8 @@ function flowPickCandidates(gi){
  if(!first){const refs=vertical?[['top','印圖上緣',pl.cx,pl.y],['cy','印圖中心',pl.cx,pl.cy],['bottom','印圖下緣',pl.cx,pl.y+pl.h]]:[['left','印圖左緣',pl.x,pl.cy],['cx','印圖中心',pl.cx,pl.cy],['right','印圖右緣',pl.x+pl.w,pl.cy]];for(const [part,label,x,y] of refs)out.push({ref:q.id+':'+part,label,x,y,art:true,size:gi.size,panel:String(pa.p.panel),lo:vertical?pl.x:pl.y,hi:vertical?pl.x+pl.w:pl.y+pl.h});return out;}
  const x=pl.cx,y=pl.cy;
  const add=(ref,label,cx,cy)=>out.push({ref,label,x:cx,y:cy,art:false,size:gi.size,panel:String(pa.p.panel)});
- if(vertical){add('ptop','版片上緣',x,pa.py+edgeY(p,'top',x-pa.px));add('pbot','版片下緣',x,pa.py+edgeY(p,'bot',x-pa.px));if(p.cfPx>50)add('redtop','紅線上端',pa.px+p.cfx,pa.py+p.hpsY);if(pk){add('pktop','口袋上緣',x,pa.py+pk.top);add('pkbottom','口袋下緣',x,pa.py+pk.bottom);}}
- else {add('pleft','版片左緣',pa.px+edgeX(p,'left',y-pa.py),y);add('pright','版片右緣',pa.px+edgeX(p,'right',y-pa.py),y);if(p.cfPx>50)add('redline','紅色中心線',pa.px+p.cfx,y);else add('pcx','版片中心',pa.px+(p.bx0+p.bx1)/2,y);if(pk){add('pkleft','口袋左緣',pa.px+pk.left,y);add('pkright','口袋右緣',pa.px+pk.right,y);}}
+ if(vertical){add('ptop','版片上緣',x,pa.py+edgeY(p,'top',x-pa.px));add('pbot','版片下緣',x,pa.py+edgeY(p,'bot',x-pa.px));if(p.redFound!==false&&p.cfPx>50)add('redtop','紅線上端',pa.px+p.cfx,pa.py+p.hpsY);if(pk){add('pktop','口袋上緣',x,pa.py+pk.top);add('pkbottom','口袋下緣',x,pa.py+pk.bottom);}}
+ else {add('pleft','版片左緣',pa.px+edgeX(p,'left',y-pa.py),y);add('pright','版片右緣',pa.px+edgeX(p,'right',y-pa.py),y);if(p.redFound!==false&&p.cfPx>50)add('redline','紅色中心線',pa.px+p.cfx,y);else add('pcx','版片中心',pa.px+(p.bx0+p.bx1)/2,y);if(pk){add('pkleft','口袋左緣',pa.px+pk.left,y);add('pkright','口袋右緣',pa.px+pk.right,y);}}
  return out;
 }
 function flowPickDistance(pt,c,gi){
@@ -2278,15 +2457,15 @@ function handleFlowPick(pt){
 function paintFlowPick(x,L){
  const gi=flowPickGeo(L);if(!gi)return;const k=($('#sheet').getBoundingClientRect().width||L.sheetW)/L.sheetW,r=Math.max(L.maxH*.006,5/Math.max(k,.01)),F=Math.max(L.F*.35,11/Math.max(k,.01));
  const candidates=flowPickCandidates(gi);x.save();
- for(const c of candidates){const color=c.art?'#832ED5':'#1269BF';x.strokeStyle=color;x.fillStyle='white';x.lineWidth=Math.max(1.5,1.5/Math.max(k,.01));
+ for(const c of candidates){if(c.noPaint)continue;const color=c.color||(c.art?'#832ED5':'#1269BF');x.strokeStyle=color;x.fillStyle='white';x.lineWidth=Math.max(1.5,1.5/Math.max(k,.01));
   if(c.art){x.setLineDash([r,r*.7]);x.beginPath();if(state.pick.kind==='v'){x.moveTo(c.lo,c.y);x.lineTo(c.hi,c.y);}else{x.moveTo(c.x,c.lo);x.lineTo(c.x,c.hi);}x.stroke();x.setLineDash([]);}
-  x.beginPath();x.arc(c.x,c.y,r,0,Math.PI*2);x.fill();x.stroke();x.font=`600 ${F}px Arial, "Microsoft JhengHei", sans-serif`;x.textAlign='left';x.textBaseline='middle';x.lineWidth=F*.25;x.strokeStyle='white';x.strokeText(c.label,c.x+r*1.6,c.y);x.fillStyle=color;x.fillText(c.label,c.x+r*1.6,c.y);
+  x.beginPath();x.arc(c.x,c.y,r,0,Math.PI*2);x.fill();x.stroke();if(c.ly!=null&&Math.abs(c.ly-c.y)>1){x.beginPath();x.moveTo(c.x+r*.7,c.y);x.lineTo(c.x+r*1.5,c.ly);x.stroke();}x.font=`600 ${F}px Arial, "Microsoft JhengHei", sans-serif`;x.textAlign='left';x.textBaseline='middle';x.lineWidth=F*.25;x.strokeStyle='white';x.strokeText(c.label,c.x+r*1.6,c.ly??c.y);x.fillStyle=color;x.fillText(c.label,c.x+r*1.6,c.ly??c.y);
  }
  if(state.pick.from){const pl=gi.place[state.pick.id],part=state.pick.from.ref.split(':')[1],cx=state.pick.kind==='v'?pl.cx:part==='left'?pl.x:part==='right'?pl.x+pl.w:pl.cx,cy=state.pick.kind==='h'?pl.cy:part==='top'?pl.y:part==='bottom'?pl.y+pl.h:pl.cy;x.fillStyle='#07956D';x.beginPath();x.arc(cx,cy,r,0,Math.PI*2);x.fill();}
  x.restore();
 }
 $('#cancelPick').onclick=()=>endPick('已取消點選，印圖位置保持不動。');
-const flowModeLabels=syncModeLabels;syncModeLabels=function(){flowModeLabels();$('#sideRef').hidden=true;$('#modeHint').textContent='位置直接在右側拖曳；量測基準在步驟 4 點選，不需設定定位下拉選單。';};
+const flowModeLabels=syncModeLabels;syncModeLabels=function(){flowModeLabels();$('#sideRef').hidden=true;$('#modeHint').textContent=isLower()?'褲子、短褲、裙子：量測以腰線／褲口為基準。':'上衣、T恤、外套：量測以領縫下 HPS／前中心 CF 為基準。';};
 $('#manPat').addEventListener('input',()=>{calc();repaint();});
 $('#manArt').addEventListener('input',()=>{const dpi=Number($('#manArt').value);if(dpi>0){state.items.forEach(it=>it.W=Math.round(it.canvas.width/dpi*1000000)/1000000);drawItemList();buildGrid();}calc();repaint();});
 const flowPNG=$('#dlPng').onclick,flowPSD=$('#dlPsd').onclick;
@@ -2488,7 +2667,7 @@ function validateGuideRule(rule){
  if(!['center','left','right'].includes(rule.side)||!['top','bottom','center'].includes(rule.end)||![rule.gap,rule.crossGap].every(n=>Number.isFinite(n)&&Math.abs(n)<=10000))throw Error('對齊距離無效。');return {main:ref(rule.main),cross:ref(rule.cross),side:rule.side,end:rule.end,gap:rule.gap,crossGap:rule.crossGap,follow:!!rule.follow};
 }
 function guideContext(size=state.selected?.size,id=state.selected?.id){const L=state.ok?computeLayout():null,gi=L?.geo.find(g=>g.size===size),it=state.items.find(i=>i.id===id),pl=it&&gi?.place[id];return pl?.has?{L,gi,it,pl,pa:pl.pan,v:pv(id,size),size,id}:null;}
-function guideNote(s,error=false){$('#guideStatus').textContent=s;$('#guideStatus').style.color=error?'#b64632':'#176c66';}
+function guideNote(s,error=false){$('#guideStatus').textContent=s;$('#guideStatus').style.color=error?'#9b4a3f':'#4f6b57';}
 const guideClone=x=>JSON.parse(JSON.stringify(x));
 function guideSnapshot(){state.gradeUndo=null;state.guideUndo=guideClone(state.place);}
 function guideAngle(id,size,value,snapshot=true){const it=state.items.find(i=>i.id===id),n=Number(value);if(!it||String(value).trim()===''||!Number.isFinite(n)||Math.abs(n)>36000)throw Error('請輸入有效角度，例如 -3.5。');if(snapshot)guideSnapshot();pv(id,size).rot=normalizeRotation(n);placementDirty=true;render();refreshSel();return pv(id,size).rot;}
@@ -2858,7 +3037,7 @@ function refreshAlignRef(){
  const mode=patAlignMode(),want=$('#patAlignRefV').value;let opts=[],note='只移動版片在版面上的排列位置；印圖定位、標註數字與尺寸都不變。';
  if(mode==='art'){opts=state.items.map(it=>[it.id,it.name]);$('#patAlignRefLabel').textContent='對齊哪一個印圖';if(!opts.length)note='尚未導入印圖，暫以下緣對齊。';else note='各尺碼的此印圖上緣排在同一水平線上，方便比對跳碼；'+note;}
  else if(mode==='line'){const groups=lineGroups(),multi=groups.length>1;for(const g of groups)for(const e of g.list)opts.push([JSON.stringify([g.piece,e.key]),(multi?g.piece+' · ':'')+e.label+(e.shown?'':'（未顯示）')]);$('#patAlignRefLabel').textContent='對齊哪一條記號線（取該線的高度中點）';if(!opts.length)note='目前版片沒有內部線資料（需由新版 Pattern 頁送出），暫以下緣對齊。';else note='隱藏的線也可作為對齊基準，不會畫在圖上。'+note;}
- else if(mode==='base')note=(isLower()?'下身以腰線／褲口（依步驟 4 的垂直基準）':'上身以領縫下 HPS（紅線頂端）')+'排成同一水平線。'+note;
+ else if(mode==='base')note=(isLower()?'下身以腰線／褲口（依步驟 7 的垂直基準）':'上身以領縫下 HPS（紅線頂端）')+'排成同一水平線。'+note;
  $('#patAlignRefWrap').hidden=!(mode==='art'||mode==='line');
  sel.replaceChildren(...opts.map(([v,t])=>{const o=document.createElement('option');o.value=v;o.textContent=t;return o;}));
  if(opts.length)sel.value=opts.some(o=>o[0]===want)?want:opts[0][0];
@@ -2877,6 +3056,388 @@ const alignOldLoad=loadPlacementProject;loadPlacementProject=async function(file
  try{await alignOldLoad(file);}catch(e){[$('#patAlign').value,$('#patAlignRefV').value]=prev;throw e;}
  finally{if(!ALIGN_MODES.includes($('#patAlign').value))$('#patAlign').value='bottom';refreshLineVis();refreshAlignRef();repaint();}
 };
+/* ================= v11：品牌跳檔參考（自動帶入 → 手動微調） =================
+   規範只是預設值：按「套用」才會寫入，之後可在表格逐碼修改。
+   pos：定位分段 [尺碼, 每碼位移(吋), 'flat'?]。0 = 按圖稿／客規（基準段）。
+        往外每跳一碼累加一次；加上 'flat' 則整段只跳一次。
+   scale：印圖縮放分段 [尺碼, %]。未列 = 不改縮放。
+   編修規範只需改下面 BRAND_RULES。 */
+const BR_Q=0.25;
+const BRAND_RULES=[
+ {id:'af',name:'A&F',tips:[],groups:[
+  {id:'girls',name:'女童',sizes:'5/6 7/8 9/10 11/12 13/14 15/16 17/18',
+   pos:[['5/6',-BR_Q],['7/8 9/10 11/12',0],['13/14 15/16 17/18',BR_Q]],
+   scale:[['5/6 7/8',90],['9/10 11/12 13/14 15/16',100],['17/18',110]]},
+  {id:'boys',name:'男童',sizes:'5/6 7/8 9/10 11/12 13/14 15/16 17/18',
+   pos:[['5/6',-BR_Q],['7/8 9/10',0],['11/12 13/14 15/16 17/18',BR_Q]],
+   scale:[['5/6 7/8',90],['9/10 11/12 13/14',100],['15/16 17/18',110]]}]},
+ {id:'athleta',name:'Athleta',tips:['基碼大小／位置同 sketch；沒有註明的可根據款式圖建議。'],groups:[
+  {id:'women',name:'女人',sizes:'XXS XS S M L XL',
+   pos:[['XXS XS',-BR_Q],['S M',0],['L XL',BR_Q]],
+   scale:[['XXS XS S M L XL',100]]},
+  {id:'girls',name:'女童',sizes:'XS S M L XL XXL',
+   pos:[['XS S',-BR_Q],['M L',0],['XL XXL',BR_Q]],
+   scale:[['XS S M',100],['L XL XXL',110]],note:'L–XXL 110% 需根據圖大小調整。'}]},
+ {id:'dicks',name:"Dick's",tips:['定點裁較多，要根據 sketch 自行建議定位，可多與 YY 互動。'],groups:[
+  {id:'adult',name:'大人',sizes:'XXS XS S M L XL XXL XXXL',pos:[],scale:[],note:'大人印圖基本都共用，尺寸按圖稿。'},
+  {id:'boys',name:'男童',sizes:'XXS XS S M L XL',pos:[],scale:[],note:'印圖分兩段：XXS–S 一段、M–XL 一段（比例依圖稿判斷後手動填）。'}]},
+ {id:'hbi',name:'HBI',tips:['圖稿都有註明大小跟位置。'],groups:[{id:'all',name:'全部',sizes:'',pos:[],scale:[]}]},
+ {id:'kohls',name:"Kohl's",tips:['根據開版規範，位置可建議。'],groups:[{id:'all',name:'全部',sizes:'',pos:[],scale:[]}]},
+ {id:'net',name:'NET',tips:['100% 全碼共用；位置圖稿會標，版師有建議可根據建議走。'],groups:[{id:'all',name:'全部',sizes:'',pos:[],scale:[]}]},
+ {id:'go',name:'GO',tips:[],groups:[
+  {id:'men',name:'男人',sizes:'XXS XS S M L XL XXL XXXL',
+   pos:[['XXS XS S',-BR_Q],['M L',0],['XL XXL XXXL',BR_Q]],
+   scale:[['XXS XS S',90],['M L',100],['XL XXL XXXL',110]]},
+  {id:'women',name:'女人',sizes:'XXS XS S M L XL XXL',
+   pos:[['XXS XS',-BR_Q],['S M L',0],['XL XXL',BR_Q]],
+   scale:[['XXS XS',95],['S M L',100],['XL XXL',105]]}]},
+ {id:'on',name:'ON',tips:[],groups:[
+  {id:'men',name:'男人（參考 GO）',alias:'go/men'},
+  {id:'women',name:'女人',sizes:'XS S M L XL XXL 2X 3X 4X',
+   pos:[['XS S',-BR_Q],['M L',0],['XL XXL',BR_Q],['2X 3X 4X',BR_Q]],
+   scale:[['XS S M',100],['L XL XXL',110],['2X 3X 4X',120]],note:'2X–4X 規範為 120%–125% 左右，預設 120%。'}]},
+ {id:'target',name:'Target',tips:['TGT 印圖定位款都做過基碼 3D，可查系統。','止滑膠參考款（含 missy+plus）：\\\\192.168.189.11\\jyyp\\3D_Work\\2D\\Data\\Target\\00GG1P','⚠️ 止滑膠的款式版子需含縫份。'],groups:[
+  {id:'girls',name:'女童',sizes:'XS S M L XL XXL',pos:[],scale:[['XS S M L XL XXL',100]],note:'印圖分段：XS–M、L、XL–XXL。一般 M 碼用 100%，印圖過大可縮至 90%；其他段比例請手動填。'},
+  {id:'boys',name:'男童',sizes:'XS S M L XL XXL',pos:[],scale:[['XS S M L XL XXL',100]],note:'印圖分段：XS–S、M–L、XL–XXL。一般 M 碼用 100%，印圖過大可縮至 90%；其他段比例請手動填。'}]}
+];
+const BR_FILES='各品牌檔案：\\\\192.168.189.11\\jyyp\\3D_Work\\2D\\Data';
+function brCanon(s){
+ let t=String(s||'').toUpperCase().replace(/\s+/g,''),m;
+ if((m=t.match(/^(\d{1,2})[\/_-](\d{1,2})$/)))return m[1]+'/'+m[2];
+ if((m=t.match(/^([234])XL$/)))return 'X'.repeat(+m[1])+'L';
+ if(t==='MED'||t==='MEDIUM')return 'M';
+ return t;
+}
+const brList=s=>String(s||'').split(/\s+/).filter(Boolean);
+function brBrand(id){return BRAND_RULES.find(b=>b.id===id)||null;}
+function brGroupRaw(bid,gid){const b=brBrand(bid);return b?.groups.find(g=>g.id===gid)||null;}
+function brGroup(bid=$('#brandSel').value,gid=$('#groupSel').value){
+ const b=brBrand(bid),g=brGroupRaw(bid,gid);if(!b||!g)return null;
+ if(g.alias){const [ab,ag]=g.alias.split('/'),t=brGroupRaw(ab,ag);if(!t)return null;return {...t,id:g.id,name:g.name,brand:b,via:brBrand(ab).name+' '+t.name};}
+ return {...g,brand:b};
+}
+/* 每個規範尺碼的累加位移（吋，基準段 = 0）與縮放 %。 */
+function brTable(g){
+ const sizes=brList(g.sizes).map(brCanon),n=sizes.length,step=new Array(n).fill(null),seg=new Array(n).fill(null),pct=new Array(n).fill(null);
+ (g.pos||[]).forEach((p,k)=>brList(p[0]).map(brCanon).forEach(s=>{const i=sizes.indexOf(s);if(i>=0){step[i]=p[1];seg[i]={k,flat:p[2]==='flat'};}}));
+ (g.scale||[]).forEach(p=>brList(p[0]).map(brCanon).forEach(s=>{const i=sizes.indexOf(s);if(i>=0)pct[i]=p[1];}));
+ const zero=step.map((v,i)=>v===0?i:-1).filter(i=>i>=0),off=new Array(n).fill(0);
+ if(zero.length){
+  const z0=zero[0],z1=zero[zero.length-1];
+  const eff=(i,nb)=>{const v=step[i]||0;return seg[i]?.flat&&seg[nb]&&seg[nb].k===seg[i].k?0:v;};
+  for(let i=z1+1;i<n;i++)off[i]=off[i-1]+eff(i,i-1);
+  for(let i=z0-1;i>=0;i--)off[i]=off[i+1]+eff(i,i+1);
+ }
+ const map=new Map();sizes.forEach((s,i)=>map.set(s,{off:off[i],pct:pct[i]}));return map;
+}
+/* 依目前版面尺碼與基碼，算出每碼相對基碼的位移與縮放倍率。 */
+function brPlanFor(g,sizes,base){
+ const rows={};sizes.forEach(s=>rows[s]={off:0,pct:null,flag:''});
+ if(!g)return {rows,hasPct:false};
+ const tbl=brTable(g),list=brList(g.sizes);
+ if(!list.length)return {rows,hasPct:false};
+ const b=tbl.get(brCanon(base));
+ if(!b)return {error:`基碼 ${base} 不在 ${g.brand.name} ${g.name} 的尺碼表（${list.join('、')}）。請改選基碼，或在版片列表修改尺碼名稱。`};
+ const bi=sizes.indexOf(base),put=(i,from)=>{const s=sizes[i],r=tbl.get(brCanon(s));if(r){rows[s].off=r.off-b.off;rows[s].pct=r.pct;}else{rows[s]={...rows[sizes[from]],flag:'規範未列'};}};
+ for(let i=bi+1;i<sizes.length;i++)put(i,i-1);
+ for(let i=bi-1;i>=0;i--)put(i,i+1);
+ rows[base].pct=b.pct;
+ return {rows,hasPct:sizes.some(s=>rows[s].pct!=null)};
+}
+function brRange(list){return list.length>1?list[0]+'–'+list[list.length-1]:list[0]||'';}
+function brSigned(v){return Math.abs(v)<1e-9?'±0':(v>0?'+':'−')+fmt(Math.abs(v));}
+function brSummary(g){
+ const out=[];
+ if((g.pos||[]).length)out.push('定位：'+g.pos.map(p=>{const l=brList(p[0]);return brRange(l)+' '+(p[1]===0?'按圖稿':(l.length>1?(p[2]==='flat'?'整段 ':'每碼 '):'')+brSigned(p[1]));}).join('｜'));
+ else out.push('定位：無固定跳值，依圖稿／建議。');
+ if((g.scale||[]).length)out.push('縮放：'+g.scale.map(p=>brRange(brList(p[0]))+' '+p[1]+'%').join('｜'));
+ else out.push('縮放：未規定（不更動目前比例）。');
+ const zero=(g.pos||[]).find(p=>p[1]===0);if(zero)out.push('建議基碼：'+brRange(brList(zero[0]))+' 其中一碼');
+ return out;
+}
+
+/* ---------- UI ---------- */
+function brFillBrands(){
+ $('#brandSel').innerHTML='<option value="">（不使用品牌規範：只套用基碼距離）</option>'+BRAND_RULES.map(b=>`<option value="${b.id}">${flowEscape(b.name)}</option>`).join('');
+}
+function brFillGroups(keep){
+ const b=brBrand($('#brandSel').value),el=$('#groupSel');
+ el.innerHTML=b?b.groups.map(g=>`<option value="${g.id}">${flowEscape(g.name)}</option>`).join(''):'<option value="">—</option>';
+ el.disabled=!b;if(b&&keep&&b.groups.some(g=>g.id===keep))el.value=keep;
+}
+function brLabel(g){return g?`${g.brand.name} ${g.name}`:'';}
+function brFollowH(it,bh){return typeof it.brFollowH==='boolean'?it.brFollowH:!(Number.isFinite(bh)&&Math.abs(bh)<1/32);}
+function brRefreshInfo(){
+ const g=brGroup(),box=$('#brandInfo');
+ if(!g){box.innerHTML=`<p class="hint" style="margin:0">未選品牌：按下方按鈕時，只把基碼的距離套到全部尺碼，縮放不變（同 v10）。</p>`;return;}
+ const tips=[...(g.brand.tips||[]),...(g.note?[g.note]:[]),...(g.via?['套用 '+g.via+' 的規範。']:[])];
+ let html=`<div class="brSum">${brSummary(g).map(l=>`<div>${flowEscape(l)}</div>`).join('')}</div>`;
+ if(tips.length)html+=`<ul class="brTips">${tips.map(t=>`<li>${flowEscape(t)}</li>`).join('')}</ul>`;
+ const it=flowItem(),L=state.ok&&it?computeLayout():null,pl=it?.brPlan,same=pl&&pl.brand===g.brand.id&&pl.group===g.id&&pl.base===(it&&gradeBase(it));
+ if(it&&L&&same)html+=`<p class="hint" style="margin:8px 0 0">已套用，跳值見下表。</p>`;
+ else if(it&&L){
+  const sizes=L.geo.map(x=>x.size),base=gradeBase(it),plan=brPlanFor(g,sizes,base);
+  if(plan.error)html+=`<p class="gradeStatus error" style="margin:8px 0 0">${flowEscape(plan.error)}</p>`;
+  else html+=`<table class="brPreview"><thead><tr><th>尺碼</th><th>預計位移</th><th>預計縮放</th></tr></thead><tbody>${sizes.map(s=>{const r=plan.rows[s];return `<tr${s===base?' class="gradeBase"':''}><td>${flowEscape(s)}${s===base?' <small>基碼</small>':''}${r.flag?' <small class="brFlag">'+r.flag+'</small>':''}</td><td>${s===base?'基碼':brSigned(r.off)}</td><td>${r.pct!=null?r.pct+'%':'不變'}</td></tr>`;}).join('')}</tbody></table>`;
+ }
+ box.innerHTML=html;
+}
+function brSyncJson(){
+ const plans={};state.items.forEach(it=>{if(it.brPlan)plans[it.id]=it.brPlan;if(typeof it.brFollowH==='boolean')(plans[it.id]=plans[it.id]||{}).follow=it.brFollowH;});
+ $('#brandPlanJson').value=JSON.stringify({brand:$('#brandSel').value,group:$('#groupSel').value,autoNote:$('#brAutoNote').checked,plans});
+}
+function brAutoNote(g,base){
+ if(!$('#brAutoNote').checked||!g)return;
+ const line=`${brLabel(g)}｜基碼 ${base}`,el=$('#footNote'),lines=el.value?el.value.split('\n'):[];
+ if(lines.length&&state.brLastNote&&lines[0]===state.brLastNote)lines[0]=line;else if(!lines.includes(line))lines.unshift(line);
+ el.value=lines.join('\n');state.brLastNote=line;
+}
+function brApplyOne(it){
+ const g=brGroup(),L0=computeLayout(),base=gradeBase(it),baseG0=L0?.geo.find(x=>x.size===base),av=gradeReference(it,'v'),ah=gradeReference(it,'h');
+ if(!baseG0||(!av&&!ah))throw Error(`「${it.name}」請先在步驟 7 確認基碼，並點選至少一個方向（垂直或水平）的量測。`);
+ const sizes=L0.geo.map(x=>x.size),plan=brPlanFor(g,sizes,base);if(plan.error)throw Error(plan.error);
+ const snap=gradeSnapshot(it);
+ const bv=av?gradeSigned(it,baseG0,av):null,bh=ah?gradeSigned(it,baseG0,ah):null;
+ if((av&&!Number.isFinite(bv))||(ah&&!Number.isFinite(bh)))throw Error(`「${it.name}」基碼缺少所選的量測基準，請在步驟 7 重新點選量測。`);
+ // 縮放 % 依規範直接寫入（以步驟 6 的寬 W 為 100%），基碼也一樣；改完再把基碼拉回原本量到的距離。
+ if(plan.hasPct)sizes.forEach(s=>{const r=plan.rows[s];if(r.pct!=null)pv(it.id,s).scale=r.pct;});
+ let L=computeLayout(),baseG=L.geo.find(x=>x.size===base);
+ if(plan.hasPct){try{const r=gradeSolve(it,baseG,{v:bv,h:bh});Object.assign(pv(it.id,base),{x:r.x,y:r.y});}catch(e){state.place[it.id]=snap.entries;throw Error(`「${it.name}」改縮放後基碼無法維持原距離：${e.message}`);}L=computeLayout();baseG=L.geo.find(x=>x.size===base);}
+ const sv=av?(Math.sign(bv)||gradeDefaultSign(it,baseG,av)):0,sh=ah?(Math.sign(bh)||gradeDefaultSign(it,baseG,ah)):0,follow=brFollowH(it,bh);
+ const rec={brand:g?.brand.id||'',group:g?.id||'',label:brLabel(g),base,follow,sizes:{[base]:{v:bv,h:bh,scale:pv(it.id,base).scale||100}}},fails=[];let ok=0;
+ for(const x of L.geo){if(x.size===base)continue;const off=plan.rows[x.size].off,t={v:av?bv+sv*off:null,h:ah?(follow?bh+sh*off:bh):null};
+  try{const r=gradeSolve(it,x,t);Object.assign(pv(it.id,x.size),{x:r.x,y:r.y});ok++;}catch(e){fails.push(x.size);}
+  rec.sizes[x.size]={v:t.v,h:t.h,scale:pv(it.id,x.size).scale||100};}
+ it.brPlan=rec;state.gradeUndo=snap;
+ const flags=sizes.filter(s=>plan.rows[s].flag);
+ return {ok,fails,flags,label:rec.label,base,follow,hasH:!!ah};
+}
+function brApply(all){
+ const items=all?state.items:[flowItem()].filter(Boolean);if(!items.length)throw Error('請先導入印圖。');
+ const g=brGroup(),old=items.filter(it=>brManualCount(it)>0);
+ if(old.length&&!confirm(`${old.map(it=>'「'+it.name+'」').join('、')} 有手動調整過的數值，重新套用會覆蓋。確定嗎？`))return;
+ const msgs=[];
+ for(const it of items){try{const r=brApplyOne(it);msgs.push(`「${it.name}」已套用${r.label?' '+r.label:'基碼距離'}（基碼 ${r.base}，${r.ok} 個尺碼）`+(r.hasH&&g?(r.follow?'，水平跟跳':'，水平不跳'):'')+(r.flags.length?`；${r.flags.join('、')} 規範未列，沿用相鄰尺碼`:'')+(r.fails.length?`；${r.fails.join('、')} 輪廓無法符合，請手動拖曳`:'')+'。');}
+  catch(e){msgs.push(e.message);}}
+ brAutoNote(g,items[0]&&gradeBase(items[0]));
+ state.pick=null;placementDirty=true;brSyncJson();buildGrid();render();refreshSel();updateAnnNotes();
+ gradeMessage(msgs.join('\n')+' 可在下表逐碼微調。',msgs.some(m=>/請先|不在|缺少/.test(m)));
+}
+function brPlanOf(it){const p=it?.brPlan;return p&&p.sizes&&p.base===gradeBase(it)?p:null;}
+function brCellManual(it,g,size,kind,refs){
+ const p=brPlanOf(it)?.sizes?.[size];if(!p)return false;
+ if(kind==='scale')return Math.abs((pv(it.id,size).scale||100)-p.scale)>0.05;
+ const a=refs[kind];if(!a||p[kind]==null)return false;const c=gradeSigned(it,g,a);return Number.isFinite(c)&&Math.abs(c-p[kind])>1/64;
+}
+function brManualCount(it){
+ const L=state.ok?computeLayout():null;if(!L||!brPlanOf(it))return 0;const refs={v:gradeReference(it,'v'),h:gradeReference(it,'h')};
+ return L.geo.reduce((n,g)=>n+['scale','v','h'].filter(k=>brCellManual(it,g,g.size,k,refs)).length,0);
+}
+function brSolveSize(it,size,targets){const L=computeLayout(),g=L.geo.find(x=>x.size===size);const r=gradeSolve(it,g,targets);Object.assign(pv(it.id,size),{x:r.x,y:r.y});}
+function brRestore(it,size){
+ const p=brPlanOf(it)?.sizes?.[size];if(!p)return;state.gradeUndo=gradeSnapshot(it);pv(it.id,size).scale=p.scale;
+ try{brSolveSize(it,size,{v:gradeReference(it,'v')?p.v:null,h:gradeReference(it,'h')?p.h:null});gradeMessage(`已將 ${size} 回復為規範值。`);}catch(e){gradeMessage(e.message,true);}
+ placementDirty=true;buildGrid();render();refreshSel();updateAnnNotes();
+}
+/* 改縮放時保持目前量到的距離（以邊緣定位，而非中心）。 */
+function brSetScale(it,size,value){
+ const n=Number(value);if(!Number.isFinite(n)||n<=0||n>10000)throw Error('請輸入大於 0 的縮放百分比。');
+ const L=computeLayout(),g=L?.geo.find(x=>x.size===size),av=gradeReference(it,'v'),ah=gradeReference(it,'h');
+ const t={v:av&&g?gradeSigned(it,g,av):null,h:ah&&g?gradeSigned(it,g,ah):null};state.gradeUndo=gradeSnapshot(it);pv(it.id,size).scale=n;
+ if((av||ah)&&g){try{brSolveSize(it,size,{v:Number.isFinite(t.v)?t.v:null,h:Number.isFinite(t.h)?t.h:null});}catch(e){gradeMessage(size+' 已改縮放，但無法維持原距離：'+e.message,true);}}
+ placementDirty=true;buildGrid();render();refreshSel();updateAnnNotes();
+}
+
+/* 取代原本的定位表：尺碼｜縮放 %｜垂直｜水平｜回復 */
+gradeRefresh=function(){
+ const it=flowItem(),L=state.ok?computeLayout():null,sizes=L?L.geo.map(g=>g.size):[],base=it?gradeBase(it):'';
+ gradeUpdateSelect($('#gradeBaseSize'),sizes.map(s=>[s,s]),base);$('#gradeBaseSize').disabled=!it||!sizes.length;$('#gradeFocusBase').disabled=!it||!sizes.length;
+ const vr=it?gradeReference(it,'v'):null,hr=it?gradeReference(it,'h'):null,vs=it?gradeOptions(it,'v'):[],hs=it?gradeOptions(it,'h'):[],refs={v:vr,h:hr};
+ const description=a=>flowDefinitionName(a.from,a.kind)+' → '+flowDefinitionName(a.to,a.kind);
+ gradeUpdateSelect($('#gradeRefV'),vs.map(a=>[gradeKey(a),description(a)]),vr?gradeKey(vr):'');gradeUpdateSelect($('#gradeRefH'),hs.map(a=>[gradeKey(a),description(a)]),hr?gradeKey(hr):'');$('#gradeRefs').hidden=vs.length<=1&&hs.length<=1;
+ const g=brGroup(),dis=!L||(!vr&&!hr)||!!state.pick;
+ $('#gradeApplyAll').disabled=dis;$('#gradeApplyAll').textContent=g?`套用基碼 ${base||''} ＋ ${brLabel(g)} 跳檔`:`將基碼 ${base||''} 位置套用全部尺碼`;
+ $('#brApplyItems').hidden=state.items.length<2;$('#brApplyItems').disabled=!L||!!state.pick;
+ $('#gradeApplyHint').textContent=!vr&&!hr?'請先在步驟 7 點選垂直或水平其中一個量測。':g?'縮放以步驟 6 的寬 W 為 100%；基碼位置不動。':'只套用基碼距離，縮放不變。';
+ if(L&&it&&(vr||hr)){const miss=L.geo.filter(x=>(vr&&!Number.isFinite(gradeSigned(it,x,vr)))||(hr&&!Number.isFinite(gradeSigned(it,x,hr)))).map(x=>x.size);if(miss.length)$('#gradeApplyHint').textContent+=` ⚠ ${miss.join('、')} 找不到所選的量測基準（該尺碼沒有這條線或交點），這些尺碼請改用其他基準或手動拖曳。`;}
+ const baseG=L?.geo.find(x=>x.size===base),bh=hr&&baseG?gradeSigned(it,baseG,hr):null;
+ $('#brFollowH').checked=it?brFollowH(it,bh):true;$('#brFollowH').disabled=!it||!hr;
+ $('#gradeInputHint').textContent=(U().n==='"'?'單位：吋，可輸入 1 3/4、3/4 或 1.75':`單位：${U().n}`)+'；按 Enter 套用。小字 = 相對基碼的跳值；橘色 = 已手動改，按 ↺ 回復規範值。';
+ const signature=JSON.stringify([it?.id,sizes,vr&&gradeKey(vr),hr&&gradeKey(hr),U().n]),box=$('#positionRows');
+ if(signature!==gradeTableSignature){gradeTableSignature=signature;
+  box.innerHTML=it&&L?L.geo.map(x=>`<tr data-size="${flowEscape(x.size)}"><td><span>${flowEscape(x.size)}</span><small data-base-label></small></td><td><input type="text" inputmode="decimal" autocomplete="off" data-brscale aria-label="${flowEscape(x.size)} 縮放百分比"></td>${['v','h'].map(kind=>{const a=refs[kind];return `<td><input type="text" autocomplete="off" spellcheck="false" data-grade="${kind}" data-size="${flowEscape(x.size)}" aria-label="${flowEscape(x.size)} ${kind==='v'?'垂直':'水平'}定位距離" ${a?'':'disabled'} placeholder="${a?'':'—'}"><small class="brDelta" data-delta="${kind}"></small></td>`;}).join('')}<td><button type="button" class="brRestore" data-br-restore title="回復規範值" hidden>↺</button></td></tr>`).join(''):'';
+  box.querySelectorAll('tr').forEach(tr=>{const size=tr.dataset.size;tr.querySelector('td').onclick=()=>select(size,it.id);
+   tr.querySelector('[data-br-restore]').onclick=()=>brRestore(it,size);
+   const si=tr.querySelector('[data-brscale]');const sc=()=>{if(si.value===si.dataset.last)return;try{brSetScale(it,size,si.value);si.removeAttribute('aria-invalid');}catch(e){si.setAttribute('aria-invalid','true');gradeMessage(e.message,true);}};si.onchange=sc;si.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();sc();}};});
+  box.querySelectorAll('input[data-grade]').forEach(input=>{
+   const commit=()=>{if(input.value===input.dataset.lastGradeValue)return;try{gradeEdit(it.id,input.dataset.size,input.dataset.grade,input.value);input.removeAttribute('aria-invalid');}catch(e){input.setAttribute('aria-invalid','true');gradeMessage(e.message,true);}};
+   input.onchange=commit;input.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();commit();}if(e.key==='Escape'){e.stopPropagation();input.value=input.dataset.lastGradeValue;input.removeAttribute('aria-invalid');}};
+  });
+ }
+ if(it&&L){
+  const plan=brPlanOf(it);
+  box.querySelectorAll('tr').forEach(tr=>{const size=tr.dataset.size,x=L.geo.find(q=>q.size===size);if(!x)return;
+   tr.classList.toggle('gradeBase',size===base);tr.classList.toggle('on',size===state.selected?.size&&it.id===state.selected?.id);tr.querySelector('[data-base-label]').textContent=size===base?'基碼':'';
+   const si=tr.querySelector('[data-brscale]');if(document.activeElement!==si){si.value=String(+(pv(it.id,size).scale||100).toFixed(2));si.dataset.last=si.value;}
+   si.classList.toggle('brManual',brCellManual(it,x,size,'scale',refs));let manual=si.classList.contains('brManual');
+   tr.querySelectorAll('input[data-grade]').forEach(input=>{const kind=input.dataset.grade,a=refs[kind],c=a?gradeSigned(it,x,a):null;
+    if(document.activeElement!==input){input.value=a?gradeInput(c):'';input.dataset.lastGradeValue=input.value;}
+    const m=brCellManual(it,x,size,kind,refs);input.classList.toggle('brManual',m);manual=manual||m;
+    const d=tr.querySelector(`[data-delta="${kind}"]`),b=a&&baseG?gradeSigned(it,baseG,a):null;
+    d.textContent=size===base||!a||!Number.isFinite(c)||!Number.isFinite(b)?'':brSigned((c-b)*(Math.sign(b)||gradeDefaultSign(it,baseG,a)));});
+   tr.querySelector('[data-br-restore]').hidden=!(plan&&manual&&size!==base);
+  });
+  const p=it.brPlan,stale=p&&p.base!==base;
+  $('#brPlanState').textContent=!p?'尚未套用':stale?`⚠️ 上次套用時基碼為 ${p.base}，目前為 ${base}，請重新套用。`:`上次套用：${p.label||'基碼距離（無品牌）'}｜基碼 ${p.base}`+(brManualCount(it)?`｜手動調整 ${brManualCount(it)} 格`:'');
+ }else $('#brPlanState').textContent='';
+ brRefreshInfo();
+ $('#gradeUndo').disabled=!state.gradeUndo;
+};
+$('#gradeApplyAll').onclick=()=>{try{brApply(false);}catch(e){gradeMessage(e.message,true);}};
+$('#brApplyItems').onclick=()=>{try{brApply(true);}catch(e){gradeMessage(e.message,true);}};
+$('#brandSel').onchange=()=>{brFillGroups();brSyncJson();gradeRefresh();};
+$('#groupSel').onchange=()=>{brSyncJson();gradeRefresh();};
+$('#brAutoNote').onchange=brSyncJson;
+$('#brFollowH').onchange=e=>{const it=flowItem();if(it){it.brFollowH=e.target.checked;brSyncJson();gradeRefresh();}};
+$('#unit').addEventListener('change',()=>{gradeTableSignature='';});
+brFillBrands();brFillGroups();
+$('#applyAll').hidden=true;
+$('#brFiles').textContent=BR_FILES;
+settingIds.push('brandPlanJson');
+$('#savePlacement').addEventListener('click',brSyncJson,true);
+const brOldLoad=loadPlacementProject;loadPlacementProject=async function(file){
+ $('#brandPlanJson').value='';
+ await brOldLoad(file);
+ let d=null;try{d=JSON.parse($('#brandPlanJson').value||'null');}catch(e){d=null;}
+ if(d&&typeof d==='object'){
+  if(typeof d.autoNote==='boolean')$('#brAutoNote').checked=d.autoNote;
+  if(brBrand(d.brand)){$('#brandSel').value=d.brand;brFillGroups(d.group);}else{$('#brandSel').value='';brFillGroups();}
+  const plans=d.plans&&typeof d.plans==='object'?d.plans:{};
+  state.items.forEach(it=>{const p=plans[it.id];if(!p||typeof p!=='object')return;if(typeof p.follow==='boolean')it.brFollowH=p.follow;if(p.sizes&&typeof p.sizes==='object'&&typeof p.base==='string')it.brPlan={brand:String(p.brand||''),group:String(p.group||''),label:brLabel(brGroup(String(p.brand||''),String(p.group||'')))||'',base:p.base,follow:!!p.follow,sizes:Object.fromEntries(Object.entries(p.sizes).filter(([,v])=>v&&typeof v==='object').map(([s,v])=>[s,{v:Number.isFinite(v.v)?v.v:null,h:Number.isFinite(v.h)?v.h:null,scale:Number.isFinite(v.scale)?v.scale:100}]))};});
+ }else{$('#brandSel').value='';brFillGroups();}
+ gradeTableSignature='';gradeRefresh();
+};
+const brOldGates=updateGates;updateGates=function(){brOldGates();$('#sBrand').classList.toggle('locked',!(state.pats.length&&state.items.length));};
+/* ================= /v11 ================= */
+
+/* ================= v15 修正 ================= */
+/* 3. 量測預設在基碼：不必先按「回到基碼」。 */
+flowSize=function(){const it=flowItem();if(state.selected?.size&&state.selected.id===it?.id)return state.selected.size;return (it&&gradeBase(it))||state.pats[0]?.size;};
+const v15StartPick=startPick;
+startPick=function(kind){
+ const it=flowItem(),L=state.ok?computeLayout():null;
+ if(it&&L){const base=gradeBase(it),gi=L.geo.find(g=>g.size===base);if(gi?.place[it.id]?.has){state.active=it.id;state.selected={size:base,id:it.id};}}
+ return v15StartPick(kind);
+};
+$('#gradeFocusBase').textContent='回到基碼';
+
+/* 2. CF × 內部線／縫線 交點：固定點，不隨印圖左右移動。 */
+function cfRef(id,branch=0){return 'cfguide@'+encodeURIComponent(id)+'@'+branch;}
+function cfDecode(ref){const m=/^cfguide@([-\w%]+)@(\d{1,4})$/.exec(String(ref));if(!m)return null;try{const id=decodeURIComponent(m[1]);return /^[-\w:]{1,100}$/.test(id)?{id,branch:Number(m[2]),cf:true}:null;}catch(e){return null;}}
+function cfHits(p,line){if(p.redFound===false||!(p.cfPx>50)||!Number.isFinite(p.cfx))return [];return measureIntersectionData(line,'v',p.cfx).filter(h=>!h.extended).map(h=>h.value);}
+function cfptDecode(ref){const m=/^cfpt@(-?\d{1,3}(?:\.\d{1,4})?)$/.exec(String(ref));if(!m)return null;const off=Number(m[1]);return Number.isFinite(off)&&Math.abs(off)<=60?{cfpt:true,off}:null;}
+function cfptRef(off){return 'cfpt@'+(Math.round(off*10000)/10000);}
+const v15Decode=measureDecode;measureDecode=function(ref){return v15Decode(ref)||cfDecode(ref)||cfptDecode(ref);};
+const v15Anchor=measureAnchor;
+measureAnchor=function(ref,pa,kind,station){
+ const q=cfptDecode(ref);if(q)return kind==='v'&&Number.isFinite(pa.p.hpsY)?pa.py+pa.p.hpsY+q.off*pa.ppi:null;
+ const r=cfDecode(ref);if(!r)return v15Anchor(ref,pa,kind,station);
+ if(kind!=='v')return null;const line=(pa.p.guides||[]).find(l=>l.id===r.id);if(!line)return null;
+ const v=cfHits(pa.p,line)[r.branch];return v==null?null:pa.py+v;
+};
+const v15Name=measureName;
+measureName=function(ref){const q=cfptDecode(ref);if(q)return Math.abs(q.off)<1e-6?'領下中心（CF）':`領下中心往下 ${fmt(q.off)}（CF）`;const r=cfDecode(ref);if(!r)return v15Name(ref);const it=flowItem(),l=state.pats.filter(p=>!it||String(p.panel)===String(it.panel)).flatMap(p=>p.guides||[]).find(l=>l.id===r.id);return 'CF × '+String(l?.label||'缺少線 '+r.id).replace(/（鏡像）$/,'')+(r.branch?'（交點 '+(r.branch+1)+'）':'');};
+const v15Options=refOptions;
+refOptions=function(kind){
+ const list=v15Options(kind);if(kind!=='v')return list;
+ const seen=new Set(list.map(p=>p[0])),it=flowItem(),c=guideContext(flowSize(),it?.id);
+ const add=ref=>{if(!seen.has(ref)){seen.add(ref);list.push([ref,measureName(ref)]);}};
+ if(c){const ys=[];for(const line of (c.pa.p.guides||[]).filter(l=>!l.hidden))cfHits(c.pa.p,line).forEach((v,b)=>{if(ys.some(y=>Math.abs(y-v)<.75))return;ys.push(v);add(cfRef(line.id,b));});}
+ for(const a of state.annos.filter(a=>a.kind==='v'))for(const ref of [a.from,a.to])if(cfDecode(ref)||cfptDecode(ref))add(ref);
+ return list;
+};
+function v16Stagger(out){
+ const L=state.layout;if(!L)return out;const k=($('#sheet').getBoundingClientRect().width||L.sheetW)/L.sheetW,F=Math.max(L.F*.35,11/Math.max(k,.01)),r=Math.max(L.maxH*.006,5/Math.max(k,.01)),placed=[];
+ for(const c of out.filter(c=>!c.noPaint).sort((a,b)=>a.y-b.y||a.x-b.x)){
+  const x0=c.x+r*1.6,w=String(c.label).length*F*.95;let ly=c.y,guard=0;
+  while(placed.some(p=>Math.abs(p.y-ly)<F*1.05&&x0<p.x1&&p.x0<x0+w)&&guard++<14)ly+=F*1.1;
+  c.ly=ly;placed.push({x0,x1:x0+w,y:ly});
+ }
+ return out;
+}
+const v15Cands=flowPickCandidates;
+// 同一位置只留一個點：CF 交點優先，其次原線（去掉重疊的鏡像線）。
+function v16Dedupe(out){
+ const keep=[],order=[...out.filter(c=>!c.guide),...out.filter(c=>c.guide)];
+ for(const c of order){if(c.guide&&keep.some(k=>!k.noPaint&&Math.abs(k.x-c.x)<1&&Math.abs(k.y-c.y)<1))continue;keep.push(c);}
+ return keep;
+}
+flowPickCandidates=function(gi){return v16Stagger(v16Dedupe(v15CandsInner(gi)));};
+function v15CandsInner(gi){
+ const out=v15Cands(gi),q=state.pick;
+ const plc=q&&gi.place[q.id];
+ for(const c of out){if(c.ref==='redtop')c.label='領下中心（CF）';else if(c.ref==='ptop')c.label='版片上緣（印圖正上方）';
+  // 垂直量測：印圖的三個點放在印圖右緣，避免和置中印圖下方的 CF 基準點疊在一起（點印圖邊任何位置都可選）。
+  else if(c.art&&q.kind==='v'&&plc?.has)c.x=plc.x+plc.w;}
+ if(!q||q.kind!=='v'||q.pattern||q.size!==gi.size)return out;
+ const pl=gi.place[q.id],pa=pl?.pan;if(!pl?.has)return out;
+ if(!isLower()&&pa.p.redFound!==false&&pa.p.cfPx>50&&Number.isFinite(pa.p.hpsY))out.push({ref:'cfline',label:'CF 紅線（點選位置）',x:pa.px+pa.p.cfx,y:pa.py+pa.p.hpsY,y0:pa.py+pa.p.hpsY,y1:pa.py+(Number.isFinite(pa.p.hemY)?pa.p.hemY:pa.p.by1),art:false,size:gi.size,panel:String(pa.p.panel),noPaint:true,ppi:pa.ppi});
+ const cfSeen=[];
+ for(const line of (pa.p.guides||[]).filter(l=>!l.hidden))cfHits(pa.p,line).forEach((v,b)=>{if(cfSeen.some(y=>Math.abs(y-v)<.75))return;cfSeen.push(v);out.push({ref:cfRef(line.id,b),label:'CF × '+String(line.label).replace(/（鏡像）$/,''),x:pa.px+pa.p.cfx,y:pa.py+v,art:false,size:gi.size,panel:String(pa.p.panel),color:'#059669'});});
+ return out;
+}
+
+// 點狀基準（領下中心、CF 交點）在附近時優先於「版片上緣」這類整條邊。
+const v15Dist=flowPickDistance;flowPickDistance=function(pt,c,gi){
+ if(c.ref==='cfline'){if(pt.y<c.y0-2||pt.y>c.y1+2)return Infinity;const k=$('#sheet').getBoundingClientRect().width/state.layout.sheetW,tol=16/Math.max(.01,k);return Math.abs(pt.x-c.x)+tol*.6;}
+ const d=v15Dist(pt,c,gi);if(cfDecode(c.ref)||c.ref==='redtop'){const k=$('#sheet').getBoundingClientRect().width/state.layout.sheetW,tol=16/Math.max(.01,k);return d<tol*.6?d/1000-1:d;}return d;};
+// 點在 CF 紅線上：換成「領下中心往下 n″」的固定點（以 1/16″ 對齊，各尺碼同距離）。
+const v15Hit=pickHit;pickHit=function(pt){
+ const c=v15Hit(pt);if(!c||c.ref!=='cfline')return c;
+ let off=Math.round((pt.y-c.y0)/c.ppi*16)/16;if(off<0)off=0;
+ if(off===0)return {...c,ref:'redtop',label:'領下中心（CF）',noPaint:false};
+ const ref=cfptRef(off);return {...c,ref,label:measureName(ref),y:c.y0+off*c.ppi,noPaint:false};
+};
+const v15Paint=paintFlowPick;paintFlowPick=function(x,L){
+ v15Paint(x,L);const q=state.pick;if(!q||q.kind!=='v'||q.pattern)return;const gi=flowPickGeo(L);if(!gi)return;
+ const c=flowPickCandidates(gi).find(c=>c.ref==='cfline');if(!c)return;
+ const k=($('#sheet').getBoundingClientRect().width||L.sheetW)/L.sheetW,F=Math.max(L.F*.3,10/Math.max(k,.01));
+ x.save();x.strokeStyle='#059669';x.globalAlpha=.8;x.lineWidth=3/Math.max(.01,k);x.setLineDash([6/Math.max(.01,k),4/Math.max(.01,k)]);
+ x.beginPath();x.moveTo(c.x,c.y0);x.lineTo(c.x,c.y1);x.stroke();x.setLineDash([]);
+ x.font=`600 ${F}px Arial, "Microsoft JhengHei", sans-serif`;x.textAlign='right';x.textBaseline='middle';x.lineWidth=F*.25;x.strokeStyle='white';
+ const t='CF 紅線：可點任一點',ty=c.y0+(c.y1-c.y0)*.85;x.strokeText(t,c.x-8/Math.max(.01,k),ty);x.fillStyle='#059669';x.fillText(t,c.x-8/Math.max(.01,k),ty);x.restore();
+};
+
+/* 4、5. 基準線：預設與標註同色；延伸到用它量測的標註線。 */
+const V15_FIXED=ref=>ref==='hps'||ref==='redtop'||!!cfDecode(ref)||!!cfptDecode(ref);
+function hpsColorNow(){return $('#hpsSameColor').checked?annoColorValue():(hex($('#hpsColorT').value)||'#E8D400');}
+function v15SyncHpsUI(){const same=$('#hpsSameColor').checked;$('#hpsColor').disabled=$('#hpsColorT').disabled=same;if(same){const c=annoColorValue();$('#hpsColor').value=c;$('#hpsColorT').value=c.toUpperCase();}}
+paintHpsLine=function(x,gi,env){
+ if(!$('#hpsLine').checked)return;
+ const col=hpsColorNow(),w=(state.hpsWin||6)*gi.ppi,lines=[];
+ const addSeg=(pa,y,x0,x1)=>{let l=lines.find(z=>z.pa===pa&&Math.abs(z.y-y)<.75);if(!l)lines.push(l={pa,y,x0,x1});l.x0=Math.min(l.x0,x0);l.x1=Math.max(l.x1,x1);};
+ Object.values(gi.pan).forEach(pa=>addSeg(pa,pa.oY,pa.oX-w/2,pa.oX+w/2));
+ for(const a of state.annos){
+  if(a.kind!=='v')continue;const fixedFrom=V15_FIXED(a.from),fixedTo=V15_FIXED(a.to);if(!fixedFrom&&!fixedTo)continue;
+  const it=annoItem(a);if(!it||!gi.place[it.id]?.has)continue;const g=annoGeom(gi,a);if(!g)continue;
+  const pa=panFor(gi,it.id),y=fixedFrom?g.a1:g.a2,cx=pa.oX,pad=.25*gi.ppi;
+  addSeg(pa,y,Math.min(cx,g.pos-pad),Math.max(cx,g.pos+pad));
+ }
+ x.save();x.strokeStyle=col;x.lineWidth=env.lw;
+ for(const l of lines){x.beginPath();x.moveTo(l.x0,l.y);x.lineTo(l.x1,l.y);x.stroke();}
+ x.restore();
+};
+$('#hpsSameColor').onchange=()=>{v15SyncHpsUI();placementDirty=true;repaint();};
+$('#annoColor').addEventListener('input',v15SyncHpsUI);$('#annoColorT').addEventListener('input',v15SyncHpsUI);
+checkIds.push('hpsSameColor');
+const v15Load=loadPlacementProject;loadPlacementProject=async function(file){
+ await v15Load(file);
+ // 舊專案沒有此設定：沿用舊的基準線色。
+ v15SyncHpsUI();$('#hpsOpts').hidden=!$('#hpsLine').checked;render();
+};
+v15SyncHpsUI();$('#hpsOpts').hidden=!$('#hpsLine').checked;
+/* ================= /v15 ================= */
+
 refreshAlignRef();
 setupFolds();syncModeLabels();syncUnitLabels();updateGates();
 (function(){
@@ -2895,7 +3456,7 @@ setupFolds();syncModeLabels();syncUnitLabels();updateGates();
   if(!skip) open();
 })();
 buildSwatches();buildTabs();buildAnnUI();
-$('#s3').classList.remove('closed');syncDefs();
+syncDefs();
 })();
 </script>
 
