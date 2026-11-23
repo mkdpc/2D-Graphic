@@ -24,9 +24,10 @@
   .head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:56px}
   h1{font:400 15px/1 var(--serif);letter-spacing:.24em;margin:0}
   .head p{margin:0;color:var(--muted);font-size:12px}
-  .grid{display:grid;grid-template-columns:1fr 1fr;border-top:1px solid var(--line)}
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid var(--line)}
   .card{display:flex;flex-direction:column;padding:40px 36px 36px 0;text-decoration:none;color:inherit;border-bottom:1px solid var(--line)}
   .card+.card{padding-left:36px;border-left:1px solid var(--line)}
+  @media(max-width:1000px) and (min-width:761px){.grid{grid-template-columns:1fr 1fr}.card:nth-child(3){padding-left:0;border-left:0}}
   .no{font:400 32px/1 var(--serif);color:var(--muted);margin-bottom:28px}
   h2{font:400 21px/1.4 var(--serif);letter-spacing:.16em;margin:0 0 12px}
   .card p{margin:0 0 32px;color:var(--muted);font-size:13px;flex:1}
@@ -58,13 +59,13 @@
 
 <div class="top">
   <span class="brand">DPC</span>
-  <nav class="toolnav" aria-label="工具切換"><a href="pattern.html"><span class="no">01</span>版片 PNG 匯出器</a><a href="placement.html"><span class="no">02</span>印圖定位產生器</a></nav>
+  <nav class="toolnav" aria-label="工具切換"><a href="pattern.html"><span class="no">01</span>版片 PNG 匯出器</a><a href="placement.html"><span class="no">02</span>印圖定位產生器</a><a href="admin.html"><span class="no">03</span>規範後台</a></nav>
 </div>
 
 <main>
   <div class="head">
     <h1>2D 工具</h1>
-    <p>所有檔案都在瀏覽器內處理，不會上傳到任何伺服器。</p>
+    <p>版片與印圖檔案都在瀏覽器內處理，不會上傳；只有品牌跳檔規範存放在雲端，供全組共用。</p>
   </div>
 
   <div class="grid">
@@ -79,6 +80,12 @@
       <h2>印圖定位產生器</h2>
       <p>定好基碼位置後，依品牌規範自動帶入跳檔參考值，再逐碼微調，產出全尺碼定位圖與標註。</p>
       <span class="go">開始定位</span>
+    </a>
+    <a class="card" href="admin.html">
+      <span class="no">03</span>
+      <h2>規範後台</h2>
+      <p>編輯各品牌的定位跳值與縮放 %；發布後，全組的印圖定位產生器都會讀到最新版，每次發布都保留版本紀錄。</p>
+      <span class="go">編輯規範</span>
     </a>
   </div>
 </main>

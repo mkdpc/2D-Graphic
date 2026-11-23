@@ -1,0 +1,644 @@
+<!doctype html>
+<html lang="zh-Hant">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>規範後台 · DPC</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%232f2f2d'/%3E%3Ctext x='16' y='21.5' font-size='13' text-anchor='middle' fill='%23fafaf7' font-family='Georgia,serif' letter-spacing='1'%3E2D%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500&family=Noto+Sans+TC:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="rules-config.js"></script>
+<style>
+:root{
+  --bg:#fafaf7;--ink:#2f2f2d;--ink2:#1f1f1d;--muted:#8c8a85;--line:#e4e2dd;--line2:#cfccc5;--soft:#f3f2ee;
+  --ok:#4f6b57;--warn:#8a6a3f;--danger:#9b4a3f;
+  --serif:"Cormorant Garamond","Microsoft JhengHei","Noto Sans TC","PingFang TC",sans-serif;
+  --sans:"Microsoft JhengHei","Noto Sans TC","PingFang TC",system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:13.5px/1.75 var(--sans);letter-spacing:.03em;-webkit-font-smoothing:antialiased}
+::selection{background:#e6e2d9}
+.top{display:flex;flex-wrap:wrap;gap:10px 24px;justify-content:space-between;align-items:baseline;padding:24px 48px;border-bottom:1px solid var(--line)}
+.brand{font:500 22px/1 var(--serif);letter-spacing:.28em;color:var(--ink2);text-decoration:none}
+main{width:min(1280px,100%);margin:0 auto;padding:40px 48px 80px}
+.head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:8px 24px;margin-bottom:20px}
+h1{font:700 22px/1.3 var(--serif);letter-spacing:.12em;color:var(--ink2);margin:0}
+.head p{margin:0;color:var(--muted);font-size:12px}
+button,.btn{font:inherit;font-size:12.5px;letter-spacing:.08em;color:var(--ink2);background:transparent;border:1px solid var(--line2);border-radius:0;min-height:34px;padding:4px 14px;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:6px}
+button:hover:not(:disabled),.btn:hover{background:var(--soft);border-color:var(--ink2)}
+button:disabled{opacity:.35;cursor:default}
+button.go{background:var(--ink2);border-color:var(--ink2);color:#fafaf7}
+button.go:hover:not(:disabled){background:#000}
+button.ghost{border-color:transparent;padding:2px 8px;min-height:28px;color:var(--muted)}
+button.ghost:hover:not(:disabled){color:var(--ink2);background:transparent;border-color:transparent;text-decoration:underline}
+button.del:hover:not(:disabled){color:var(--danger)}
+input[type=text],input[type=password],select,textarea{font:inherit;color:var(--ink2);background:transparent;border:0;border-bottom:1px solid var(--line2);border-radius:0;padding:6px 4px;width:100%;min-width:0}
+textarea{border:1px solid var(--line2);resize:vertical;min-height:64px;line-height:1.6}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--ink2)}
+input[aria-invalid=true]{border-color:var(--danger);background:#f8eeeb}
+label.f{display:block;margin:10px 0}
+label.f>em{display:block;font-style:normal;font-size:11.5px;color:var(--muted);letter-spacing:.08em}
+.hint{color:var(--muted);font-size:12px;margin:6px 0}
+.bar{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:14px 0;border-top:1px solid var(--ink2);border-bottom:1px solid var(--line)}
+.bar .sp{flex:1}
+#cloudState{font-size:12.5px;color:var(--ink)}
+#cloudState b{font-weight:700}
+.dirty{color:var(--warn)}
+#msg{min-height:22px;margin:10px 0 0;font-size:12.5px;white-space:pre-line}
+#msg.err{color:var(--danger)}#msg.ok{color:var(--ok)}
+.banner{border:1px solid var(--line2);background:#fff;padding:14px 18px;margin:16px 0 0;font-size:12.5px}
+.banner h3{font:700 15px/1.4 var(--serif);letter-spacing:.1em;margin:0 0 6px;color:var(--ink2)}
+.banner ol{margin:6px 0 4px;padding-left:20px}.banner li{margin:2px 0}
+.banner .row{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+code{font-family:Consolas,ui-monospace,monospace;font-size:12px;background:var(--soft);padding:0 4px}
+.layout{display:grid;grid-template-columns:240px 1fr;gap:0;margin-top:24px;border-top:1px solid var(--line)}
+#side{border-right:1px solid var(--line);padding:18px 18px 18px 0}
+#side h2,.sectionTitle{font:700 14px/1.4 var(--serif);letter-spacing:.14em;color:var(--ink2);margin:0 0 10px}
+#brandList{list-style:none;margin:0 0 10px;padding:0}
+#brandList button{width:100%;justify-content:space-between;border:0;border-bottom:1px solid var(--line);min-height:40px;padding:6px 8px;text-align:left}
+#brandList button.on{background:var(--ink2);color:#fafaf7}
+#brandList small{font-size:11px;color:inherit;opacity:.7}
+#brandList .mark{color:var(--warn);font-size:10px;margin-left:4px}
+#brandList button.on .mark{color:#f0d9b5}
+#brandList .bad{color:var(--danger)}
+#editor{padding:18px 0 18px 28px;min-width:0}
+.bhead{display:grid;grid-template-columns:1fr 160px auto;gap:12px;align-items:end}
+.bhead input#bName{font:700 22px/1.3 var(--serif);letter-spacing:.08em;padding:4px}
+.tools{display:flex;gap:2px;flex-wrap:wrap}
+.grp{border:1px solid var(--line);background:#fff;margin:18px 0;padding:16px 18px}
+.ghead{display:grid;grid-template-columns:1fr 120px 1.2fr auto;gap:10px;align-items:end}
+.ghead input[data-f=name]{font-weight:700;font-size:15px}
+.cols{display:grid;grid-template-columns:1.25fr 1fr;gap:20px;margin-top:6px}
+h4{font:700 13px/1.4 var(--sans);letter-spacing:.12em;margin:14px 0 4px;color:var(--ink2)}
+table{border-collapse:collapse;width:100%}
+th{font-weight:400;font-size:11px;color:var(--muted);text-align:left;padding:4px 4px;border-bottom:1px solid var(--line)}
+td{padding:2px 4px;border-bottom:1px solid var(--line);vertical-align:middle}
+td input,td select{padding:5px 2px;border-bottom-color:transparent}
+td input:hover,td select:hover{border-bottom-color:var(--line2)}
+td.x{width:30px;text-align:right}
+.pv{margin-top:14px;padding-top:10px;border-top:1px dashed var(--line2)}
+.pv .pvh{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.pv select{width:auto}
+.pv table{margin-top:4px;font-size:12px}
+.pv td{padding:3px 6px}
+.pv tr.base td{font-weight:700;background:var(--soft)}
+.chips{display:flex;flex-wrap:wrap;gap:4px 10px;font-size:12px}
+.issues{margin:10px 0 0;padding:0;list-style:none;font-size:12px}
+.issues li{padding:2px 0}.issues .e{color:var(--danger)}.issues .w{color:var(--warn)}
+.issues .e::before{content:"✕ "}.issues .w::before{content:"△ "}
+dialog{border:1px solid var(--ink2);border-radius:0;padding:0;width:min(720px,94vw);background:var(--bg);color:var(--ink)}
+dialog::backdrop{background:rgba(31,31,29,.35)}
+dialog header{display:flex;justify-content:space-between;align-items:center;padding:16px 22px;border-bottom:1px solid var(--line)}
+dialog header h3{margin:0;font:700 17px/1.3 var(--serif);letter-spacing:.12em}
+dialog .body{padding:14px 22px;max-height:62vh;overflow:auto}
+dialog footer{display:flex;justify-content:flex-end;gap:8px;padding:12px 22px;border-top:1px solid var(--line)}
+.diff{margin:0;padding:0;list-style:none;font-size:12.5px}
+.diff li{padding:5px 0;border-bottom:1px solid var(--line)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+#dlgMsg,#histMsg{min-height:20px;font-size:12.5px;white-space:pre-line}
+#dlgMsg.err,#histMsg.err{color:var(--danger)}
+.hist td{font-size:12px;padding:6px 4px}
+.hist td.v{font-weight:700;white-space:nowrap}
+.hist td.a{white-space:nowrap;text-align:right}
+.empty{color:var(--muted);padding:30px 0}
+@media(max-width:900px){
+  .top,main{padding-left:20px;padding-right:20px}
+  .layout{grid-template-columns:1fr}#side{border-right:0;padding-right:0}#editor{padding-left:0}
+  .cols,.ghead,.bhead{grid-template-columns:1fr}
+}
+
+/* v16 共用導覽列（三頁一致） */
+.toolnav{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 22px;font:500 12px/1.6 "Microsoft JhengHei","Noto Sans TC","PingFang TC",system-ui,sans-serif;letter-spacing:.1em}
+.toolnav a{color:#8c8a85;text-decoration:none;border-bottom:1px solid transparent;padding-bottom:1px;white-space:nowrap}
+.toolnav a:hover{color:#1f1f1d;border-bottom-color:#1f1f1d}
+.toolnav a[aria-current=page]{color:#1f1f1d;font-weight:700;border-bottom-color:#1f1f1d}
+.toolnav .home::before{content:"( "}.toolnav .home::after{content:" )"}
+.toolnav .no{font-family:"Cormorant Garamond","Microsoft JhengHei",serif;font-size:14px;font-weight:500;margin-right:6px;letter-spacing:0}
+
+</style>
+<body>
+<div class="top">
+  <a class="brand" href="./">DPC</a>
+  <nav class="toolnav" aria-label="工具切換"><a href="./" class="home">← 首頁</a><a href="pattern.html"><span class="no">01</span>版片 PNG 匯出器</a><a href="placement.html"><span class="no">02</span>印圖定位產生器</a><a href="admin.html" aria-current="page"><span class="no">03</span>規範後台</a></nav>
+</div>
+<main>
+  <div class="head">
+    <h1>品牌跳檔規範後台</h1>
+    <p>發布後，所有人重新開啟印圖定位產生器（或按「↻ 更新規範」）就會使用最新版。</p>
+  </div>
+
+  <div class="bar">
+    <span id="cloudState">讀取中…</span>
+    <span class="sp"></span>
+    <button id="btnReload" type="button">↻ 重新載入</button>
+    <button id="btnDiff" type="button">檢視變更</button>
+    <button id="btnHist" type="button">歷史紀錄</button>
+    <button id="btnExport" type="button">匯出 JSON</button>
+    <button id="btnImport" type="button">匯入 JSON</button>
+    <input id="importFile" type="file" accept=".json,application/json" hidden>
+    <button id="btnSave" type="button" class="go">儲存並發布</button>
+  </div>
+  <p id="msg" role="status" aria-live="polite"></p>
+  <div id="banner"></div>
+
+  <div class="layout">
+    <div id="side">
+      <h2>品牌</h2>
+      <ul id="brandList"></ul>
+      <button id="addBrand" type="button" style="width:100%">＋ 新增品牌</button>
+      <label class="f" style="margin-top:22px"><em>各品牌檔案路徑（顯示在定位產生器）</em><input type="text" id="filesPath" spellcheck="false"></label>
+      <p class="hint">修改會先自動存成此瀏覽器的草稿；按「儲存並發布」才會給所有人使用。每次發布都會保留一個版本，可隨時從歷史紀錄還原。</p>
+    </div>
+    <div id="editor"></div>
+  </div>
+</main>
+
+<dialog id="saveDlg">
+  <header><h3>儲存並發布</h3><button type="button" class="ghost" data-close>關閉</button></header>
+  <div class="body">
+    <p class="hint" id="saveBase"></p>
+    <ul class="diff" id="saveDiff"></ul>
+    <ul class="issues" id="saveWarn"></ul>
+    <div class="two">
+      <label class="f"><em>你的名字（必填）</em><input type="text" id="saveName" maxlength="40" autocomplete="name"></label>
+      <label class="f" id="saveKeyWrap" hidden><em>團隊編輯密碼</em><input type="password" id="saveKey" autocomplete="current-password"></label>
+    </div>
+    <label class="f"><em>修改說明（必填，例如「ON 女人 2X–4X 改 125%」）</em><input type="text" id="saveNote" maxlength="300"></label>
+    <p id="dlgMsg" role="status"></p>
+  </div>
+  <footer><button type="button" data-close>取消</button><button type="button" class="go" id="saveGo">確認發布</button></footer>
+</dialog>
+
+<dialog id="histDlg">
+  <header><h3>歷史紀錄</h3><button type="button" class="ghost" data-close>關閉</button></header>
+  <div class="body">
+    <p class="hint">「載入編輯」會把該版內容放進編輯區；確認後按「儲存並發布」，就會以新版本號還原（舊紀錄都會保留）。</p>
+    <table class="hist"><thead><tr><th>版本</th><th>時間</th><th>修改人</th><th>說明</th><th></th></tr></thead><tbody id="histRows"></tbody></table>
+    <ul class="diff" id="histDiff"></ul>
+    <p id="histMsg" role="status"></p>
+  </div>
+  <footer><button type="button" data-close>關閉</button></footer>
+</dialog>
+
+<dialog id="diffDlg">
+  <header><h3>檢視變更</h3><button type="button" class="ghost" data-close>關閉</button></header>
+  <div class="body"><p class="hint" id="diffBase"></p><ul class="diff" id="diffList"></ul><ul class="issues" id="diffIssues"></ul></div>
+  <footer><button type="button" id="btnDiscard" class="del">捨棄全部修改</button><button type="button" data-close>關閉</button></footer>
+</dialog>
+
+<script>
+/* ---------- 與定位產生器共用的計算 ---------- */
+function brCanon(s){
+ let t=String(s||'').toUpperCase().replace(/\s+/g,''),m;
+ if((m=t.match(/^(\d{1,2})[\/_-](\d{1,2})$/)))return m[1]+'/'+m[2];
+ if((m=t.match(/^([234])XL$/)))return 'X'.repeat(+m[1])+'L';
+ if(t==='MED'||t==='MEDIUM')return 'M';
+ return t;
+}
+
+const brList=s=>String(s||'').split(/\s+/).filter(Boolean);
+
+function brTable(g){
+ const sizes=brList(g.sizes).map(brCanon),n=sizes.length,step=new Array(n).fill(null),seg=new Array(n).fill(null),pct=new Array(n).fill(null);
+ (g.pos||[]).forEach((p,k)=>brList(p[0]).map(brCanon).forEach(s=>{const i=sizes.indexOf(s);if(i>=0){step[i]=p[1];seg[i]={k,flat:p[2]==='flat'};}}));
+ (g.scale||[]).forEach(p=>brList(p[0]).map(brCanon).forEach(s=>{const i=sizes.indexOf(s);if(i>=0)pct[i]=p[1];}));
+ const zero=step.map((v,i)=>v===0?i:-1).filter(i=>i>=0),off=new Array(n).fill(0);
+ if(zero.length){
+  const z0=zero[0],z1=zero[zero.length-1];
+  const eff=(i,nb)=>{const v=step[i]||0;return seg[i]?.flat&&seg[nb]&&seg[nb].k===seg[i].k?0:v;};
+  for(let i=z1+1;i<n;i++)off[i]=off[i-1]+eff(i,i-1);
+  for(let i=z0-1;i>=0;i--)off[i]=off[i+1]+eff(i,i+1);
+ }
+ const map=new Map();sizes.forEach((s,i)=>map.set(s,{off:off[i],pct:pct[i]}));return map;
+}
+
+function brRange(list){return list.length>1?list[0]+'–'+list[list.length-1]:list[0]||'';}
+
+/* v17：規範檢查（後台與定位產生器共用）。回傳 {errors:[], warnings:[]}，每項 {at, msg}。 */
+function brValidateRules(r){
+ const errors=[],warnings=[],E=(at,msg)=>errors.push({at,msg}),W=(at,msg)=>warnings.push({at,msg});
+ if(!r||typeof r!=='object'||!Array.isArray(r.brands)){E('規範','格式錯誤：缺少品牌清單。');return {errors,warnings};}
+ if(!r.brands.length)E('規範','至少需要一個品牌。');
+ const bids=new Set();
+ r.brands.forEach((b,bi)=>{
+  const bn=(b&&typeof b.name==='string'&&b.name.trim())||`第 ${bi+1} 個品牌`;
+  if(!b||typeof b!=='object'){E(bn,'格式錯誤。');return;}
+  if(typeof b.name!=='string'||!b.name.trim())E(bn,'請填品牌名稱。');
+  if(typeof b.id!=='string'||!/^[A-Za-z0-9_-]+$/.test(b.id))E(bn,'品牌代碼只能用英文、數字、- 或 _。');
+  else if(bids.has(b.id))E(bn,`品牌代碼「${b.id}」重複。`);else bids.add(b.id);
+  if(b.tips!=null&&(!Array.isArray(b.tips)||b.tips.some(t=>typeof t!=='string')))E(bn,'提示格式錯誤。');
+  if(!Array.isArray(b.groups)||!b.groups.length){E(bn,'至少需要一個客群。');return;}
+  const gids=new Set();
+  b.groups.forEach((g,gi)=>{
+   const gn=bn+' '+((g&&typeof g.name==='string'&&g.name.trim())||`第 ${gi+1} 個客群`);
+   if(!g||typeof g!=='object'){E(gn,'格式錯誤。');return;}
+   if(typeof g.name!=='string'||!g.name.trim())E(gn,'請填客群名稱。');
+   if(typeof g.id!=='string'||!/^[A-Za-z0-9_-]+$/.test(g.id))E(gn,'客群代碼只能用英文、數字、- 或 _。');
+   else if(gids.has(g.id))E(gn,`客群代碼「${g.id}」重複。`);else gids.add(g.id);
+   if(g.alias){
+    const [ab,ag]=String(g.alias).split('/'),tb=r.brands.find(x=>x&&x.id===ab),tg=tb&&Array.isArray(tb.groups)?tb.groups.find(x=>x&&x.id===ag):null;
+    if(!tg)E(gn,`參考的客群「${g.alias}」不存在。`);else if(tg.alias)E(gn,'參考的客群本身也是參考，請直接指向有規範的客群。');
+    return;
+   }
+   if(g.sizes!=null&&typeof g.sizes!=='string')E(gn,'尺碼格式錯誤。');
+   const sizes=brList(g.sizes).map(brCanon),set=new Set(sizes),dup=sizes.filter((s,i)=>sizes.indexOf(s)!==i);
+   if(dup.length)E(gn,`尺碼重複：${[...new Set(dup)].join('、')}。`);
+   const pos=g.pos||[],scale=g.scale||[];
+   if(!Array.isArray(pos)||!Array.isArray(scale)){E(gn,'分段格式錯誤。');return;}
+   if(!sizes.length&&(pos.length||scale.length))E(gn,'有分段但沒有填尺碼表。');
+   const seen=(list,label)=>{const used=new Map();list.forEach((p,k)=>{
+    if(!Array.isArray(p)||typeof p[0]!=='string'){E(gn,`${label}第 ${k+1} 段格式錯誤。`);return;}
+    const l=brList(p[0]).map(brCanon);if(!l.length)E(gn,`${label}第 ${k+1} 段沒有填尺碼。`);
+    l.forEach(s=>{if(sizes.length&&!set.has(s))E(gn,`${label}第 ${k+1} 段的 ${s} 不在尺碼表。`);if(used.has(s))E(gn,`${s} 同時出現在${label}第 ${used.get(s)+1} 段和第 ${k+1} 段。`);else used.set(s,k);});});return used;};
+   const pu=seen(pos,'定位'),su=seen(scale,'縮放');
+   pos.forEach((p,k)=>{if(!Array.isArray(p))return;if(typeof p[1]!=='number'||!Number.isFinite(p[1]))E(gn,`定位第 ${k+1} 段的位移不是數字。`);else if(Math.abs(p[1])>3)W(gn,`定位第 ${k+1} 段每碼 ${p[1]}″，數值偏大，請確認。`);if(p[2]!=null&&p[2]!=='flat')E(gn,`定位第 ${k+1} 段的方式格式錯誤。`);});
+   scale.forEach((p,k)=>{if(!Array.isArray(p))return;if(typeof p[1]!=='number'||!(p[1]>0&&p[1]<=1000))E(gn,`縮放第 ${k+1} 段的 % 需介於 1–1000。`);});
+   if(pos.length){
+    const zi=pos.map((p,k)=>Array.isArray(p)&&p[1]===0?k:-1).filter(k=>k>=0);
+    if(!zi.length)E(gn,'定位分段需要一段「0（按圖稿）」作為基準。');
+    else{const idx=sizes.map((s,i)=>pu.has(s)&&pos[pu.get(s)][1]===0?i:-1).filter(i=>i>=0);
+     if(idx.length&&idx[idx.length-1]-idx[0]+1!==idx.length)W(gn,'「0（按圖稿）」的尺碼不連續，中間的尺碼也會當成 0。');}
+    const miss=sizes.filter(s=>!pu.has(s));if(miss.length)W(gn,`${miss.join('、')} 沒有列在定位分段，會跟相鄰尺碼同位移。`);
+   }
+   if(scale.length){const miss=sizes.filter(s=>!su.has(s));if(miss.length)W(gn,`${miss.join('、')} 沒有列在縮放分段，套用時不改縮放。`);}
+  });
+ });
+ if(r.files!=null&&typeof r.files!=='string')E('規範','品牌檔案路徑格式錯誤。');
+ return {errors,warnings};
+}
+
+const BUILTIN={"files": "\\\\192.168.189.11\\jyyp\\3D_Work\\2D\\Data", "brands": [{"id": "af", "name": "A&F", "tips": [], "groups": [{"id": "girls", "name": "女童", "sizes": "5/6 7/8 9/10 11/12 13/14 15/16 17/18", "pos": [["5/6", -0.25], ["7/8 9/10 11/12", 0], ["13/14 15/16 17/18", 0.25]], "scale": [["5/6 7/8", 90], ["9/10 11/12 13/14 15/16", 100], ["17/18", 110]]}, {"id": "boys", "name": "男童", "sizes": "5/6 7/8 9/10 11/12 13/14 15/16 17/18", "pos": [["5/6", -0.25], ["7/8 9/10", 0], ["11/12 13/14 15/16 17/18", 0.25]], "scale": [["5/6 7/8", 90], ["9/10 11/12 13/14", 100], ["15/16 17/18", 110]]}]}, {"id": "athleta", "name": "Athleta", "tips": ["基碼大小／位置同 sketch；沒有註明的可根據款式圖建議。"], "groups": [{"id": "women", "name": "女人", "sizes": "XXS XS S M L XL", "pos": [["XXS XS", -0.25], ["S M", 0], ["L XL", 0.25]], "scale": [["XXS XS S M L XL", 100]]}, {"id": "girls", "name": "女童", "sizes": "XS S M L XL XXL", "pos": [["XS S", -0.25], ["M L", 0], ["XL XXL", 0.25]], "scale": [["XS S M", 100], ["L XL XXL", 110]], "note": "L–XXL 110% 需根據圖大小調整。"}]}, {"id": "dicks", "name": "Dick's", "tips": ["定點裁較多，要根據 sketch 自行建議定位，可多與 YY 互動。"], "groups": [{"id": "adult", "name": "大人", "sizes": "XXS XS S M L XL XXL XXXL", "pos": [], "scale": [], "note": "大人印圖基本都共用，尺寸按圖稿。"}, {"id": "boys", "name": "男童", "sizes": "XXS XS S M L XL", "pos": [], "scale": [], "note": "印圖分兩段：XXS–S 一段、M–XL 一段（比例依圖稿判斷後手動填）。"}]}, {"id": "hbi", "name": "HBI", "tips": ["圖稿都有註明大小跟位置。"], "groups": [{"id": "all", "name": "全部", "sizes": "", "pos": [], "scale": []}]}, {"id": "kohls", "name": "Kohl's", "tips": ["根據開版規範，位置可建議。"], "groups": [{"id": "all", "name": "全部", "sizes": "", "pos": [], "scale": []}]}, {"id": "net", "name": "NET", "tips": ["100% 全碼共用；位置圖稿會標，版師有建議可根據建議走。"], "groups": [{"id": "all", "name": "全部", "sizes": "", "pos": [], "scale": []}]}, {"id": "go", "name": "GO", "tips": [], "groups": [{"id": "men", "name": "男人", "sizes": "XXS XS S M L XL XXL XXXL", "pos": [["XXS XS S", -0.25], ["M L", 0], ["XL XXL XXXL", 0.25]], "scale": [["XXS XS S", 90], ["M L", 100], ["XL XXL XXXL", 110]]}, {"id": "women", "name": "女人", "sizes": "XXS XS S M L XL XXL", "pos": [["XXS XS", -0.25], ["S M L", 0], ["XL XXL", 0.25]], "scale": [["XXS XS", 95], ["S M L", 100], ["XL XXL", 105]]}]}, {"id": "on", "name": "ON", "tips": [], "groups": [{"id": "men", "name": "男人（參考 GO）", "alias": "go/men"}, {"id": "women", "name": "女人", "sizes": "XS S M L XL XXL 2X 3X 4X", "pos": [["XS S", -0.25], ["M L", 0], ["XL XXL", 0.25], ["2X 3X 4X", 0.25]], "scale": [["XS S M", 100], ["L XL XXL", 110], ["2X 3X 4X", 120]], "note": "2X–4X 規範為 120%–125% 左右，預設 120%。"}]}, {"id": "target", "name": "Target", "tips": ["TGT 印圖定位款都做過基碼 3D，可查系統。", "止滑膠參考款（含 missy+plus）：\\\\192.168.189.11\\jyyp\\3D_Work\\2D\\Data\\Target\\00GG1P", "⚠️ 止滑膠的款式版子需含縫份。"], "groups": [{"id": "girls", "name": "女童", "sizes": "XS S M L XL XXL", "pos": [], "scale": [["XS S M L XL XXL", 100]], "note": "印圖分段：XS–M、L、XL–XXL。一般 M 碼用 100%，印圖過大可縮至 90%；其他段比例請手動填。"}, {"id": "boys", "name": "男童", "sizes": "XS S M L XL XXL", "pos": [], "scale": [["XS S M L XL XXL", 100]], "note": "印圖分段：XS–S、M–L、XL–XXL。一般 M 碼用 100%，印圖過大可縮至 90%；其他段比例請手動填。"}]}]};
+</script>
+<script>
+(function(){
+'use strict';
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const clone=o=>JSON.parse(JSON.stringify(o));
+const DRAFT_KEY='dpc2d.rules.draft',NAME_KEY='dpc2d.rules.editor',CACHE_KEY='dpc2d.rules.cache';
+const store={get(k){try{return localStorage.getItem(k);}catch(e){return null;}},set(k,v){try{localStorage.setItem(k,v);}catch(e){}},del(k){try{localStorage.removeItem(k);}catch(e){}}};
+function API(){const u=String(window.DPC_RULES_API||'').trim();return /^https:\/\/|^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?\//.test(u)?u:'';}
+
+let base=null;        // 草稿所依據的版本內容（比對與「有無修改」用）
+let baseVersion=-1;   // -1 = 無法發布（未連線）；0 = 雲端尚無版本
+let cloudMeta=null;   // 雲端目前版本資訊
+let needKey=false;
+let draft=null;
+let sel=0;
+const pvBase=new Map(); // 預覽用的基碼（不存進規範）
+const autoId=new WeakSet();
+
+/* ---------- 格式 ---------- */
+function frac(v){
+ if(!Number.isFinite(v))return '';if(v===0)return '0';
+ const s=v<0?'-':'',a=Math.abs(v),n=Math.round(a*16);
+ if(Math.abs(n/16-a)>1e-9)return s+String(+a.toFixed(4));
+ const w=Math.floor(n/16);let r=n%16,d=16;if(!r)return s+w;while(r%2===0){r/=2;d/=2;}return s+(w?w+' ':'')+r+'/'+d;
+}
+function signed(v){return !Number.isFinite(v)?'—':Math.abs(v)<1e-9?'±0':(v>0?'+':'−')+frac(Math.abs(v))+'″';}
+function parseStep(t){
+ t=String(t??'').trim().replace(/[−–—]/g,'-').replace(/[＋+"″吋]/g,'').replace(/\s+/g,' ').trim();if(!t)return NaN;
+ let sign=1,m;if(t[0]==='-'){sign=-1;t=t.slice(1).trim();}
+ if((m=t.match(/^(\d+) (\d+)\/(\d+)$/)))return +m[3]>0?sign*(+m[1]+m[2]/m[3]):NaN;
+ if((m=t.match(/^(\d+)\/(\d+)$/)))return +m[2]>0?sign*m[1]/m[2]:NaN;
+ if(/^(\d+\.?\d*|\.\d+)$/.test(t))return sign*parseFloat(t);
+ return NaN;
+}
+function when(s){const d=new Date(s);if(!s||isNaN(d))return '';const p=n=>String(n).padStart(2,'0');return `${d.getFullYear()}/${p(d.getMonth()+1)}/${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;}
+const posText=g=>(g.pos||[]).length?g.pos.map(p=>`${brRange(brList(p[0]))} ${p[1]===0?'按圖稿':(brList(p[0]).length>1?(p[2]==='flat'?'整段 ':'每碼 '):'')+signed(p[1])}`).join('｜'):'無';
+const scaleText=g=>(g.scale||[]).length?g.scale.map(p=>`${brRange(brList(p[0]))} ${p[1]}%`).join('｜'):'無';
+const core=r=>JSON.stringify({files:r.files||'',brands:r.brands});
+function gLabel(b,g){return `${b.name||'（未命名）'} ${g.name||'（未命名）'}`;}
+function resolveAlias(r,g){if(!g.alias)return g;const [ab,ag]=String(g.alias).split('/'),tb=r.brands.find(x=>x.id===ab);return tb?.groups.find(x=>x.id===ag)||null;}
+
+/* ---------- 差異 ---------- */
+function diffRules(a,b){
+ const out=[],A=new Map(a.brands.map(x=>[x.id,x])),B=new Map(b.brands.map(x=>[x.id,x]));
+ if((a.files||'')!==(b.files||''))out.push(`品牌檔案路徑：${a.files||'（空）'} → ${b.files||'（空）'}`);
+ for(const nb of b.brands){const ob=A.get(nb.id);
+  if(!ob){out.push(`＋ 新增品牌 ${nb.name}（${nb.groups.map(g=>g.name).join('、')}）`);continue;}
+  if(ob.name!==nb.name)out.push(`${ob.name}：品牌名稱改為 ${nb.name}`);
+  if(JSON.stringify(ob.tips||[])!==JSON.stringify(nb.tips||[]))out.push(`${nb.name}：品牌提示已修改`);
+  const G=new Map(ob.groups.map(g=>[g.id,g]));
+  for(const ng of nb.groups){const og=G.get(ng.id),L=gLabel(nb,ng);
+   if(!og){out.push(`＋ ${L}：新增客群`);continue;}
+   if(og.name!==ng.name)out.push(`${gLabel(nb,og)}：客群名稱改為 ${ng.name}`);
+   if((og.alias||'')!==(ng.alias||''))out.push(`${L}：參考客群 ${og.alias||'無'} → ${ng.alias||'無'}`);
+   if(ng.alias&&og.alias===ng.alias)continue;
+   if(brList(og.sizes).join(' ')!==brList(ng.sizes).join(' '))out.push(`${L}：尺碼 ${og.sizes||'（空）'} → ${ng.sizes||'（空）'}`);
+   if(posText(og)!==posText(ng))out.push(`${L}：定位 ${posText(og)} → ${posText(ng)}`);
+   if(scaleText(og)!==scaleText(ng))out.push(`${L}：縮放 ${scaleText(og)} → ${scaleText(ng)}`);
+   if((og.note||'')!==(ng.note||''))out.push(`${L}：備註已修改`);
+  }
+  for(const og of ob.groups)if(!nb.groups.some(g=>g.id===og.id))out.push(`－ ${gLabel(ob,og)}：刪除客群`);
+  const oo=ob.groups.map(g=>g.id).filter(id=>nb.groups.some(g=>g.id===id)),no=nb.groups.map(g=>g.id).filter(id=>G.has(id));
+  if(oo.join()!==no.join())out.push(`${nb.name}：客群順序已調整`);
+ }
+ for(const ob of a.brands)if(!B.has(ob.id))out.push(`－ 刪除品牌 ${ob.name}`);
+ const oa=a.brands.map(x=>x.id).filter(id=>B.has(id)),nbo=b.brands.map(x=>x.id).filter(id=>A.has(id));
+ if(oa.join()!==nbo.join())out.push('品牌順序已調整');
+ return out;
+}
+
+/* ---------- 狀態列 ---------- */
+function isDirty(){return draft&&base&&core(draft)!==core(base);}
+function msg(t,kind){const m=$('#msg');m.textContent=t||'';m.className=kind||'';}
+function renderState(){
+ const el=$('#cloudState');let t='';
+ if(!API())t='<b>尚未連接規範後台</b>　·　目前顯示內建規範，只能匯出／匯入 JSON';
+ else if(!cloudMeta)t='<b>無法連線到規範後台</b>';
+ else if(cloudMeta.empty)t='<b>雲端尚無版本</b>　·　發布後即成為 v1';
+ else t=`雲端目前 <b>v${cloudMeta.version}</b>　·　${esc(when(cloudMeta.updatedAt))}　·　${esc(cloudMeta.editor||'未署名')}${cloudMeta.note?'　·　'+esc(cloudMeta.note):''}`;
+ if(isDirty()){const n=diffRules(base,draft).length;t+=`<br><span class="dirty">● 有 ${n||1} 項修改尚未發布（已自動存成此瀏覽器的草稿${baseVersion>0?`，依據 v${baseVersion}`:''}）</span>`;}
+ el.innerHTML=t;
+ $('#btnSave').disabled=baseVersion<0||(!isDirty()&&baseVersion!==0);
+ $('#btnSave').title=baseVersion<0?'請先設定規範後台網址（rules-config.js）':'';
+ $('#btnDiff').disabled=!isDirty();
+ $('#btnHist').disabled=!API()||!cloudMeta||cloudMeta.empty;
+}
+function setupBanner(){
+ if(API())return '';
+ return `<div class="banner"><h3>尚未連接規範後台</h3>
+  <p>需要先做一次設定，之後大家在這頁修改、發布，定位產生器就會自動讀到最新規範：</p>
+  <ol>
+   <li>建立一份 Google 試算表 → 選單「擴充功能 → Apps Script」，把 <a href="rules-backend.gs" download>rules-backend.gs</a> 的內容全部貼上並儲存。</li>
+   <li>（建議）專案設定 → 指令碼屬性，新增 <code>EDIT_KEY</code> = 團隊編輯密碼。</li>
+   <li>選函式 <code>setup</code> → 執行並授權（只需一次）。</li>
+   <li>部署 → 新增部署作業 → 網頁應用程式；執行身分「我」、存取權「所有人」→ 複製結尾為 <code>/exec</code> 的網址。</li>
+   <li>把網址貼到 <code>rules-config.js</code>，上傳到 GitHub。</li>
+  </ol>
+  <p class="hint" style="margin:0">設定前仍可在這裡編輯，按「匯出 JSON」備份。</p></div>`;
+}
+
+/* ---------- 草稿 ---------- */
+let draftTimer=0;
+function saveDraftSoon(){clearTimeout(draftTimer);draftTimer=setTimeout(saveDraft,300);}
+function saveDraft(){if(!draft)return;if(isDirty())store.set(DRAFT_KEY,JSON.stringify({base:baseVersion,at:Date.now(),rules:{files:draft.files||'',brands:draft.brands}}));else store.del(DRAFT_KEY);}
+
+/* ---------- 品牌清單 ---------- */
+function issuesFor(at){const c=brValidateRules(draft);return {e:c.errors.filter(x=>x.at===at||x.at.startsWith(at+' ')),w:c.warnings.filter(x=>x.at===at||x.at.startsWith(at+' '))};}
+function renderList(){
+ const B=base?new Map(base.brands.map(b=>[b.id,JSON.stringify(b)])):new Map(),chk=brValidateRules(draft);
+ $('#brandList').innerHTML=draft.brands.map((b,i)=>{
+  const label=b.name||`第 ${i+1} 個品牌`,changed=B.get(b.id)!==JSON.stringify(b),bad=chk.errors.some(x=>x.at===label||x.at.startsWith(label+' '));
+  return `<li><button type="button" data-i="${i}" class="${i===sel?'on':''}"><span>${esc(b.name||'（未命名）')}${changed?'<span class="mark" title="尚未發布">●</span>':''}${bad?' <span class="bad" title="有錯誤">✕</span>':''}</span><small>${b.groups.length} 客群</small></button></li>`;}).join('');
+}
+$('#brandList').addEventListener('click',e=>{const b=e.target.closest('button[data-i]');if(!b)return;sel=+b.dataset.i;renderAll();});
+$('#addBrand').onclick=()=>{
+ const n=draft.brands.length+1,b={id:'brand'+n,name:'新品牌 '+n,tips:[],groups:[{id:'all',name:'全部',sizes:'',pos:[],scale:[]}]};
+ while(draft.brands.some(x=>x.id===b.id))b.id+='x';
+ autoId.add(b);draft.brands.push(b);sel=draft.brands.length-1;changed(true);
+ setTimeout(()=>{const i=$('#bName');i?.focus();i?.select();},0);
+};
+$('#filesPath').addEventListener('input',e=>{draft.files=e.target.value.trim();changed(false);});
+
+/* ---------- 編輯區 ---------- */
+function slug(s){return String(s).toLowerCase().normalize('NFKD').replace(/['’&]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');}
+function aliasOptions(b,g){
+ const opts=['<option value="">不參考（自行設定）</option>'];
+ draft.brands.forEach(ob=>ob.groups.forEach(og=>{if(og===g||og.alias)return;const v=ob.id+'/'+og.id;opts.push(`<option value="${esc(v)}"${g.alias===v?' selected':''}>參考 ${esc(gLabel(ob,og))}</option>`);}));
+ if(g.alias&&!opts.some(o=>o.includes(`value="${esc(g.alias)}"`)))opts.push(`<option value="${esc(g.alias)}" selected>參考 ${esc(g.alias)}（不存在）</option>`);
+ return opts.join('');
+}
+function previewHtml(b,gi){
+ const g0=b.groups[gi],g=resolveAlias(draft,g0);
+ if(!g)return '<p class="hint">參考的客群不存在。</p>';
+ const sizes=brList(g.sizes);
+ if(!sizes.length)return '<p class="hint">未設定尺碼表：定位產生器只會把基碼距離套到全部尺碼，縮放不變。</p>';
+ const tbl=brTable(g),key=b.id+'/'+g0.id,zero=(g.pos||[]).find(p=>p[1]===0),def=zero?brList(zero[0])[0]:sizes[Math.floor((sizes.length-1)/2)];
+ let bs=pvBase.get(key);if(!sizes.includes(bs))bs=def;
+ const bo=tbl.get(brCanon(bs))?.off??0;
+ return `<div class="pvh"><h4 style="margin:0">預覽</h4><label class="hint" style="margin:0">基碼 <select data-pv="${esc(key)}">${sizes.map(s=>`<option${s===bs?' selected':''}>${esc(s)}</option>`).join('')}</select></label><span class="hint" style="margin:0">（與定位產生器同一套計算）</span></div>
+  <table><thead><tr><th>尺碼</th><th>相對基碼位移</th><th>縮放</th></tr></thead><tbody>${sizes.map(s=>{const r=tbl.get(brCanon(s));return `<tr class="${s===bs?'base':''}"><td>${esc(s)}${s===bs?' · 基碼':''}</td><td>${s===bs?'—':signed(r.off-bo)}</td><td>${r.pct!=null?r.pct+'%':'不變'}</td></tr>`;}).join('')}</tbody></table>`;
+}
+function groupHtml(b,g,gi){
+ const label=gLabel(b,g),is=issuesFor(label);
+ const head=`<div class="ghead">
+   <label class="f"><em>客群名稱</em><input type="text" data-g="${gi}" data-f="name" value="${esc(g.name)}"></label>
+   <label class="f"><em>代碼</em><input type="text" data-g="${gi}" data-f="id" value="${esc(g.id)}" spellcheck="false"></label>
+   <label class="f"><em>規範來源</em><select data-g="${gi}" data-f="alias">${aliasOptions(b,g)}</select></label>
+   <div class="tools"><button type="button" class="ghost" data-act="gup" data-g="${gi}" ${gi?'':'disabled'} title="上移">↑</button><button type="button" class="ghost" data-act="gdown" data-g="${gi}" ${gi<b.groups.length-1?'':'disabled'} title="下移">↓</button><button type="button" class="ghost del" data-act="gdel" data-g="${gi}">刪除客群</button></div>
+  </div>`;
+ const issues=is.e.length||is.w.length?`<ul class="issues">${is.e.map(x=>`<li class="e">${esc(x.msg)}</li>`).join('')}${is.w.map(x=>`<li class="w">${esc(x.msg)}</li>`).join('')}</ul>`:'';
+ if(g.alias)return `<div class="grp" data-gi="${gi}">${head}<p class="hint">此客群直接使用所選客群的規範；要改數值請到該客群修改。</p><div class="pv" data-pvbox="${gi}">${previewHtml(b,gi)}</div><div data-issues="${gi}">${issues}</div></div>`;
+ const posRows=(g.pos||[]).map((p,k)=>`<tr><td><input type="text" data-g="${gi}" data-pos="${k}" data-c="0" value="${esc(p[0])}" placeholder="例：XL XXL" spellcheck="false"></td><td style="width:110px"><input type="text" data-g="${gi}" data-pos="${k}" data-c="1" value="${esc(frac(p[1]))}" placeholder="例：1/4"></td><td style="width:110px"><select data-g="${gi}" data-pos="${k}" data-c="2"><option value="">每碼累加</option><option value="flat"${p[2]==='flat'?' selected':''}>整段一次</option></select></td><td class="x"><button type="button" class="ghost del" data-act="pdel" data-g="${gi}" data-k="${k}" title="刪除此段">✕</button></td></tr>`).join('');
+ const scRows=(g.scale||[]).map((p,k)=>`<tr><td><input type="text" data-g="${gi}" data-sc="${k}" data-c="0" value="${esc(p[0])}" placeholder="例：L XL XXL" spellcheck="false"></td><td style="width:80px"><input type="text" data-g="${gi}" data-sc="${k}" data-c="1" value="${esc(p[1])}" inputmode="decimal"></td><td class="x"><button type="button" class="ghost del" data-act="sdel" data-g="${gi}" data-k="${k}" title="刪除此段">✕</button></td></tr>`).join('');
+ return `<div class="grp" data-gi="${gi}">${head}
+  <label class="f"><em>尺碼表（由小到大，以空白分隔；童裝可寫 5/6）</em><input type="text" data-g="${gi}" data-f="sizes" value="${esc(g.sizes||'')}" spellcheck="false"></label>
+  <label class="f"><em>備註（顯示在定位產生器步驟 8）</em><input type="text" data-g="${gi}" data-f="note" value="${esc(g.note||'')}"></label>
+  <div class="cols">
+   <div><h4>定位跳值（吋）</h4>
+    <table><thead><tr><th>尺碼</th><th>每碼位移</th><th>方式</th><th></th></tr></thead><tbody>${posRows||'<tr><td colspan="4" class="hint">無固定跳值（依圖稿／建議）</td></tr>'}</tbody></table>
+    <button type="button" class="ghost" data-act="padd" data-g="${gi}">＋ 新增分段</button>
+    <p class="hint">0 = 按圖稿（基準段）。從基準段往外，每跳一碼累加一次；「整段一次」= 整段只跳一次。正值 = 離量測基準更遠，負值 = 更近。可輸入 1/4、-1/4、1 1/4 或 0.25。</p>
+   </div>
+   <div><h4>縮放 %</h4>
+    <table><thead><tr><th>尺碼</th><th>%</th><th></th></tr></thead><tbody>${scRows||'<tr><td colspan="3" class="hint">未規定（不更動比例）</td></tr>'}</tbody></table>
+    <button type="button" class="ghost" data-act="sadd" data-g="${gi}">＋ 新增分段</button>
+    <p class="hint">以定位產生器步驟 6 的寬 W 為 100%。</p>
+   </div>
+  </div>
+  <div class="pv" data-pvbox="${gi}">${previewHtml(b,gi)}</div>
+  <div data-issues="${gi}">${issues}</div>
+ </div>`;
+}
+function renderEditor(){
+ const box=$('#editor'),b=draft.brands[sel];
+ if(!b){box.innerHTML='<p class="empty">尚無品牌，請按左側「＋ 新增品牌」。</p>';return;}
+ const bi=issuesFor(b.name||`第 ${sel+1} 個品牌`),own=[...bi.e,...bi.w].filter(x=>x.at===(b.name||`第 ${sel+1} 個品牌`));
+ box.innerHTML=`<div class="bhead">
+   <label class="f" style="margin:0"><em>品牌名稱</em><input type="text" id="bName" value="${esc(b.name)}"></label>
+   <label class="f" style="margin:0"><em title="舊專案靠代碼對應品牌">代碼（發布後勿改）</em><input type="text" id="bId" value="${esc(b.id)}" spellcheck="false"></label>
+   <div class="tools"><button type="button" class="ghost" data-act="bup" ${sel?'':'disabled'} title="上移">↑</button><button type="button" class="ghost" data-act="bdown" ${sel<draft.brands.length-1?'':'disabled'} title="下移">↓</button><button type="button" class="ghost del" data-act="bdel">刪除品牌</button></div>
+  </div>
+  <ul class="issues" id="bIssues">${own.map(x=>`<li class="${bi.e.includes(x)?'e':'w'}">${esc(x.msg)}</li>`).join('')}</ul>
+  <label class="f"><em>品牌提示（一行一則，顯示在定位產生器步驟 8）</em><textarea id="bTips" rows="3">${esc((b.tips||[]).join('\n'))}</textarea></label>
+  ${b.groups.map((g,gi)=>groupHtml(b,g,gi)).join('')}
+  <button type="button" data-act="gadd">＋ 新增客群</button>`;
+}
+function refreshGroup(gi){
+ const b=draft.brands[sel],g=b.groups[gi],el=document.querySelector(`[data-pvbox="${gi}"]`);if(el)el.innerHTML=previewHtml(b,gi);
+ const is=issuesFor(gLabel(b,g)),box=document.querySelector(`[data-issues="${gi}"]`);
+ if(box)box.innerHTML=is.e.length||is.w.length?`<ul class="issues">${is.e.map(x=>`<li class="e">${esc(x.msg)}</li>`).join('')}${is.w.map(x=>`<li class="w">${esc(x.msg)}</li>`).join('')}</ul>`:'';
+ // 其他客群可能參考這個客群
+ b.groups.forEach((o,i)=>{if(i!==gi&&o.alias){const e=document.querySelector(`[data-pvbox="${i}"]`);if(e)e.innerHTML=previewHtml(b,i);}});
+}
+function renderAll(){
+ if(sel>=draft.brands.length)sel=Math.max(0,draft.brands.length-1);
+ $('#filesPath').value=draft.files||'';
+ renderList();renderEditor();renderState();
+}
+function changed(structural){saveDraftSoon();if(structural)renderAll();else{renderList();renderState();}}
+
+const ed=$('#editor');
+ed.addEventListener('input',e=>{
+ const t=e.target,b=draft.brands[sel];if(!b)return;
+ if(t.id==='bName'){b.name=t.value;if(autoId.has(b)){const s=slug(t.value);if(s&&!draft.brands.some(x=>x!==b&&x.id===s)){b.id=s;$('#bId').value=s;}}changed(false);return;}
+ if(t.id==='bId'){autoId.delete(b);b.id=t.value.trim();changed(false);return;}
+ if(t.id==='bTips'){b.tips=t.value.split('\n').map(x=>x.trim()).filter(Boolean);changed(false);return;}
+ if(t.dataset.pv){pvBase.set(t.dataset.pv,t.value);const gi=+t.closest('.grp').dataset.gi;refreshGroup(gi);return;}
+ const gi=+t.dataset.g;if(!Number.isInteger(gi))return;const g=b.groups[gi];
+ if(t.dataset.f){
+  const f=t.dataset.f;
+  if(f==='alias'){if(t.value){g.alias=t.value;delete g.sizes;delete g.pos;delete g.scale;delete g.note;}else{delete g.alias;g.sizes='';g.pos=[];g.scale=[];}changed(true);return;}
+  if(f==='id')g.id=t.value.trim();else if(f==='sizes')g.sizes=t.value.replace(/\s+/g,' ').trim();else if(f==='note'){if(t.value.trim())g.note=t.value.trim();else delete g.note;}else g[f]=t.value;
+  refreshGroup(gi);changed(false);return;
+ }
+ if(t.dataset.pos!=null){const p=g.pos[+t.dataset.pos],c=+t.dataset.c;
+  if(c===0)p[0]=t.value.replace(/\s+/g,' ').trim();
+  else if(c===1){const v=parseStep(t.value);t.setAttribute('aria-invalid',String(!Number.isFinite(v)));p[1]=Number.isFinite(v)?v:NaN;}
+  else{if(t.value==='flat')p[2]='flat';else p.length=2;}
+  refreshGroup(gi);changed(false);return;}
+ if(t.dataset.sc!=null){const p=g.scale[+t.dataset.sc],c=+t.dataset.c;
+  if(c===0)p[0]=t.value.replace(/\s+/g,' ').trim();else{const v=Number(String(t.value).replace(/[%％\s]/g,''));t.setAttribute('aria-invalid',String(!(v>0&&v<=1000)));p[1]=Number.isFinite(v)&&t.value.trim()?v:NaN;}
+  refreshGroup(gi);changed(false);return;}
+});
+ed.addEventListener('change',e=>{const t=e.target;if(t.dataset.f==='alias'||t.dataset.pv)return;if(t.dataset.f==='name'||t.id==='bName'||t.id==='bId'||t.dataset.f==='id')renderAll();});
+ed.addEventListener('click',e=>{
+ const btn=e.target.closest('button[data-act]');if(!btn)return;
+ const b=draft.brands[sel],a=btn.dataset.act,gi=+btn.dataset.g,g=b.groups[gi],k=+btn.dataset.k;
+ const mv=(arr,i,j)=>{if(j<0||j>=arr.length)return;[arr[i],arr[j]]=[arr[j],arr[i]];};
+ if(a==='bup'){mv(draft.brands,sel,sel-1);sel--;}
+ else if(a==='bdown'){mv(draft.brands,sel,sel+1);sel++;}
+ else if(a==='bdel'){if(!confirm(`確定刪除品牌「${b.name}」？（發布前都可以從「檢視變更」捨棄）`))return;draft.brands.splice(sel,1);sel=Math.max(0,sel-1);}
+ else if(a==='gadd'){let n=b.groups.length+1,id='group'+n;while(b.groups.some(x=>x.id===id))id+='x';b.groups.push({id,name:'新客群',sizes:'',pos:[],scale:[]});}
+ else if(a==='gdel'){if(b.groups.length<2){alert('每個品牌至少要有一個客群。');return;}if(!confirm(`確定刪除客群「${g.name}」？`))return;b.groups.splice(gi,1);}
+ else if(a==='gup')mv(b.groups,gi,gi-1);
+ else if(a==='gdown')mv(b.groups,gi,gi+1);
+ else if(a==='padd'){(g.pos=g.pos||[]).push(['',g.pos.some(p=>p[1]===0)?0.25:0]);}
+ else if(a==='pdel')g.pos.splice(k,1);
+ else if(a==='sadd'){(g.scale=g.scale||[]).push(['',100]);}
+ else if(a==='sdel')g.scale.splice(k,1);
+ else return;
+ changed(true);
+ if(a==='padd'||a==='sadd'){const rows=document.querySelectorAll(`.grp[data-gi="${gi}"] [data-${a==='padd'?'pos':'sc'}][data-c="0"]`);rows[rows.length-1]?.focus();}
+});
+
+/* ---------- 雲端 ---------- */
+async function call(params,body,ms=20000){
+ const url=API();if(!url)throw Error('尚未設定規範後台網址。');
+ const ctl=new AbortController(),t=setTimeout(()=>ctl.abort(),ms);
+ try{
+  const res=body?await fetch(url,{method:'POST',body:JSON.stringify(body),signal:ctl.signal}):
+   await fetch(url+(url.includes('?')?'&':'?')+new URLSearchParams({...params,t:Date.now()}),{signal:ctl.signal,cache:'no-store'});
+  const d=await res.json();if(!d||typeof d!=='object')throw Error('後台回應格式錯誤。');return d;
+ }catch(e){if(e.name==='AbortError')throw Error('連線逾時，請稍後再試。');if(e instanceof SyntaxError)throw Error('後台回應不是 JSON，請確認網址是「網頁應用程式」的 /exec 網址，且存取權為「所有人」。');if(/fetch|network/i.test(e.message))throw Error('無法連線到規範後台。');throw e;}
+ finally{clearTimeout(t);}
+}
+function seed(){return {files:BUILTIN.files||'',brands:clone(BUILTIN.brands)};}
+async function loadCloud(silent){
+ if(!API()){cloudMeta=null;base=seed();baseVersion=-1;return;}
+ try{
+  const d=await call({action:'get'});if(!d.ok)throw Error('後台錯誤：'+(d.detail||d.error));
+  needKey=!!d.needKey;
+  if(d.empty){cloudMeta={empty:true};base=seed();baseVersion=0;}
+  else{const r=d.rules;cloudMeta={version:r.version,updatedAt:r.updatedAt,editor:r.editor,note:r.note};base={files:r.files||'',brands:clone(r.brands)};baseVersion=r.version;store.set(CACHE_KEY,JSON.stringify(r));}
+ }catch(e){cloudMeta=null;base=seed();baseVersion=-1;if(!silent)msg(e.message+' 目前顯示內建規範；可編輯後匯出 JSON。','err');}
+}
+async function start(){
+ msg('');await loadCloud(false);
+ draft=clone(base);
+ const raw=store.get(DRAFT_KEY);let d=null;try{d=JSON.parse(raw||'null');}catch(e){}
+ let banner=setupBanner();
+ if(d&&d.rules&&Array.isArray(d.rules.brands)&&core(d.rules)!==core(base)){
+  const stale=baseVersion>0&&d.base!==baseVersion;
+  banner+=`<div class="banner" id="draftBanner"><h3>此瀏覽器有尚未發布的草稿</h3><p>最後修改：${esc(when(new Date(d.at).toISOString()))}${d.base>0?`，依據 v${d.base}`:''}。${stale?`<br><span class="dirty">雲端已更新到 v${baseVersion}。繼續草稿的話，發布時會被擋下，請先「匯出 JSON」備份，再對照最新版修改。</span>`:''}</p><div class="row"><button type="button" class="go" id="useDraft">繼續編輯草稿</button><button type="button" id="dropDraft">捨棄草稿</button></div></div>`;
+  $('#banner').innerHTML=banner;
+  $('#useDraft').onclick=()=>{draft={files:d.rules.files||'',brands:d.rules.brands};if(d.base!==baseVersion&&d.base>=0&&baseVersion>=0)baseVersion=d.base;$('#draftBanner').remove();renderAll();msg('已載入草稿。');};
+  $('#dropDraft').onclick=()=>{store.del(DRAFT_KEY);$('#draftBanner').remove();msg('已捨棄草稿。');};
+ }else{$('#banner').innerHTML=banner;store.del(DRAFT_KEY);}
+ renderAll();
+}
+$('#btnReload').onclick=async()=>{
+ if(isDirty()&&!confirm('重新載入會以雲端最新版取代目前的修改（草稿會被捨棄）。確定嗎？'))return;
+ store.del(DRAFT_KEY);await loadCloud(false);draft=clone(base);$('#banner').innerHTML=setupBanner();renderAll();if(cloudMeta&&!cloudMeta.empty)msg(`已載入雲端 v${baseVersion}。`,'ok');
+};
+
+/* ---------- 檢視變更 ---------- */
+function issuesHtml(chk){return chk.errors.map(x=>`<li class="e">${esc(x.at)}：${esc(x.msg)}</li>`).join('')+chk.warnings.map(x=>`<li class="w">${esc(x.at)}：${esc(x.msg)}</li>`).join('');}
+document.querySelectorAll('dialog [data-close]').forEach(b=>b.onclick=()=>b.closest('dialog').close());
+$('#btnDiff').onclick=()=>{
+ const list=diffRules(base,draft);
+ $('#diffBase').textContent=baseVersion>0?`與雲端 v${baseVersion} 比較：`:'與內建規範比較：';
+ $('#diffList').innerHTML=list.length?list.map(x=>`<li>${esc(x)}</li>`).join(''):'<li>沒有修改。</li>';
+ $('#diffIssues').innerHTML=issuesHtml(brValidateRules(draft));
+ $('#diffDlg').showModal();
+};
+$('#btnDiscard').onclick=()=>{if(!confirm('捨棄全部尚未發布的修改？'))return;draft=clone(base);store.del(DRAFT_KEY);$('#diffDlg').close();renderAll();msg('已捨棄修改。');};
+
+/* ---------- 發布 ---------- */
+$('#btnSave').onclick=()=>{
+ const chk=brValidateRules(draft);
+ if(chk.errors.length){msg('有 '+chk.errors.length+' 個錯誤，請先修正：\n'+chk.errors.slice(0,6).map(x=>`· ${x.at}：${x.msg}`).join('\n')+(chk.errors.length>6?'\n…':''),'err');
+  const first=draft.brands.findIndex(b=>chk.errors.some(x=>x.at===(b.name||'')||x.at.startsWith((b.name||'')+' ')));if(first>=0&&first!==sel){sel=first;renderAll();}return;}
+ const list=diffRules(base,draft);
+ $('#saveBase').textContent=baseVersion>0?`將以 v${baseVersion} 為基礎發布 v${baseVersion+1}，變更如下：`:'將發布第一版（v1）：';
+ $('#saveDiff').innerHTML=(list.length?list:['（內容與目前相同）']).map(x=>`<li>${esc(x)}</li>`).join('');
+ $('#saveWarn').innerHTML=issuesHtml({errors:[],warnings:chk.warnings});
+ $('#saveName').value=store.get(NAME_KEY)||$('#saveName').value;$('#saveKeyWrap').hidden=!needKey;
+ if(baseVersion===0&&!list.length)$('#saveNote').value=$('#saveNote').value||'建立第一版（沿用內建規範）';
+ $('#dlgMsg').textContent='';$('#dlgMsg').className='';$('#saveGo').disabled=false;
+ $('#saveDlg').showModal();(($('#saveName').value?$('#saveNote'):$('#saveName'))).focus();
+};
+$('#saveGo').onclick=async()=>{
+ const name=$('#saveName').value.trim(),note=$('#saveNote').value.trim(),dm=$('#dlgMsg');
+ if(!name||!note){dm.textContent='請填寫名字與修改說明，方便之後查歷史紀錄。';dm.className='err';return;}
+ if(needKey&&!$('#saveKey').value){dm.textContent='請輸入團隊編輯密碼。';dm.className='err';return;}
+ store.set(NAME_KEY,name);$('#saveGo').disabled=true;dm.className='';dm.textContent='發布中…';
+ try{
+  const rules={files:draft.files||'',brands:draft.brands};
+  const d=await call(null,{action:'save',base:baseVersion,editor:name,note,key:$('#saveKey').value,rules});
+  if(!d.ok){
+   const why={key:'團隊編輯密碼錯誤。',conflict:`發布失敗：雲端已有較新的 v${d.current}（${d.editor||'未署名'}，${when(d.updatedAt)}）。你的修改仍保留在草稿；請先「匯出 JSON」備份，再按「↻ 重新載入」取得最新版後重新修改。`,invalid:'後台拒絕：'+(d.detail||'格式錯誤')}[d.error]||('後台錯誤：'+(d.detail||d.error));
+   dm.textContent=why;dm.className='err';$('#saveGo').disabled=d.error==='conflict';return;}
+  const saved={...rules,schema:1,version:d.version,updatedAt:d.updatedAt,editor:d.editor,note};
+  store.set(CACHE_KEY,JSON.stringify(saved));store.del(DRAFT_KEY);
+  cloudMeta={version:d.version,updatedAt:d.updatedAt,editor:d.editor,note};base=clone(rules);baseVersion=d.version;draft=clone(rules);
+  $('#saveNote').value='';$('#saveDlg').close();$('#banner').innerHTML='';renderAll();
+  msg(`已發布 v${d.version}。其他人重新開啟定位產生器，或在步驟 8 按「↻ 更新規範」即可使用。`,'ok');
+ }catch(e){dm.textContent=e.message+' 修改仍保留在草稿。';dm.className='err';$('#saveGo').disabled=false;}
+};
+
+/* ---------- 歷史紀錄 ---------- */
+$('#btnHist').onclick=async()=>{
+ const hm=$('#histMsg');$('#histRows').innerHTML='';$('#histDiff').innerHTML='';hm.textContent='讀取中…';hm.className='';$('#histDlg').showModal();
+ try{const d=await call({action:'history'});if(!d.ok)throw Error('後台錯誤：'+(d.detail||d.error));
+  $('#histRows').innerHTML=d.items.map(it=>`<tr><td class="v">v${it.version}${it.version===cloudMeta?.version?' · 目前':''}</td><td>${esc(when(it.updatedAt))}</td><td>${esc(it.editor)}</td><td>${esc(it.note)}</td><td class="a"><button type="button" class="ghost" data-hv="${it.version}" data-h="diff">比對</button><button type="button" class="ghost" data-hv="${it.version}" data-h="load">載入編輯</button></td></tr>`).join('');
+  hm.textContent=d.items.length?'':'尚無紀錄。';
+ }catch(e){hm.textContent=e.message;hm.className='err';}
+};
+$('#histRows').addEventListener('click',async e=>{
+ const b=e.target.closest('button[data-hv]');if(!b)return;const v=+b.dataset.hv,hm=$('#histMsg');hm.className='';hm.textContent='讀取 v'+v+'…';
+ try{const d=await call({action:'version',v});if(!d.ok)throw Error(d.error==='notfound'?'找不到這個版本。':'後台錯誤：'+(d.detail||d.error));
+  const r={files:d.rules.files||'',brands:d.rules.brands};
+  if(b.dataset.h==='diff'){const list=diffRules(r,draft);hm.textContent='';$('#histDiff').innerHTML=`<li><b>v${v} → 目前編輯中的內容</b></li>`+(list.length?list.map(x=>`<li>${esc(x)}</li>`).join(''):'<li>內容相同。</li>');return;}
+  if(isDirty()&&!confirm(`載入 v${v} 會取代目前尚未發布的修改。確定嗎？`)){hm.textContent='';return;}
+  draft=clone(r);sel=0;$('#histDlg').close();changed(true);
+  msg(v===baseVersion?`已載入 v${v}。`:`已載入 v${v} 的內容。確認無誤後按「儲存並發布」，會發布成新版本（還原）。`,'ok');
+ }catch(err){hm.textContent=err.message;hm.className='err';}
+});
+
+/* ---------- 匯出／匯入 ---------- */
+$('#btnExport').onclick=()=>{
+ const p=n=>String(n).padStart(2,'0'),d=new Date(),name=`brand-rules_${d.getFullYear()}${p(d.getMonth()+1)}${p(d.getDate())}_${p(d.getHours())}${p(d.getMinutes())}.json`;
+ const blob=new Blob([JSON.stringify({schema:1,basedOn:baseVersion,exportedAt:d.toISOString(),files:draft.files||'',brands:draft.brands},null,1)],{type:'application/json'});
+ const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),5000);
+ msg('已匯出 '+name+'。');
+};
+$('#btnImport').onclick=()=>$('#importFile').click();
+$('#importFile').onchange=async e=>{
+ const f=e.target.files[0];e.target.value='';if(!f)return;
+ try{const r=JSON.parse(await f.text());const chk=brValidateRules(r);
+  if(!r||!Array.isArray(r.brands))throw Error('不是規範 JSON。');
+  if(isDirty()&&!confirm('匯入會取代目前尚未發布的修改。確定嗎？'))return;
+  draft={files:typeof r.files==='string'?r.files:'',brands:clone(r.brands)};sel=0;changed(true);
+  msg(`已匯入 ${f.name}（${draft.brands.length} 個品牌）`+(chk.errors.length?`，有 ${chk.errors.length} 個錯誤需要修正後才能發布。`:'。確認後按「儲存並發布」。'),chk.errors.length?'err':'ok');
+ }catch(err){msg('匯入失敗：'+err.message,'err');}
+};
+
+window.addEventListener('beforeunload',e=>{if(isDirty()){saveDraft();e.preventDefault();e.returnValue='';}});
+start();
+})();
+</script>
+</body>
+</html>

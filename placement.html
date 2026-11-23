@@ -1,6 +1,7 @@
 <!doctype html>
 <html lang="zh-Hant" class=""><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
+<script src="rules-config.js"></script>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%232f2f2d'/%3E%3Ctext x='16' y='21.5' font-size='13' text-anchor='middle' fill='%23fafaf7' font-family='Georgia,serif' letter-spacing='1'%3E2D%3C/text%3E%3C/svg%3E">
 <title>印圖定位產生器 · DPC</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500&family=Noto+Sans+TC:wght@300;400;500&display=swap">
@@ -252,6 +253,10 @@ body{min-width:0}main{min-height:0}.bar{flex-shrink:0;flex-wrap:wrap;overflow:vi
 /* v11 品牌跳檔 */
 .stepTitle{margin:0;padding:14px 20px 0;font-size:13px;font-weight:650}
 .stepTitle b{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:#e9e4fb;color:#5b21b6;font-size:11px;margin-right:7px}
+#brRulesBar,.brRulesBar{display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;margin:8px 0 10px;padding:8px 0;border-top:1px solid #e4e2dd;border-bottom:1px solid #e4e2dd}
+.brRulesBar p{flex:1 1 200px;margin:0;font-size:12px;line-height:1.6;color:#5f5d58}
+.brRulesBar button,.brRulesBar a{font-size:12px;min-height:28px;padding:3px 10px;color:#1f1f1d;text-decoration:none;border:1px solid #cfccc5;background:#fff;display:inline-flex;align-items:center}
+.brRulesWarn{color:#8a6a3f}
 #brandInfo{margin:10px 0;padding:10px 11px;background:#f7f9fb;border:1px solid #e5ebf0;border-radius:8px;font-size:12px;line-height:1.7}
 .brSum div{overflow-wrap:anywhere}
 .brTips{margin:6px 0 0;padding-left:18px;color:#7a4b00;font-size:11.5px}
@@ -402,7 +407,7 @@ aside>.toolnav+h1{padding-top:12px}
 </style></head><body>
 
 <aside>
-  <nav class="toolnav" aria-label="工具切換"><a href="./" class="home">← 首頁</a><a href="pattern.html"><span class="no">01</span>版片 PNG 匯出器</a><a href="placement.html" aria-current="page"><span class="no">02</span>印圖定位產生器</a></nav>
+  <nav class="toolnav" aria-label="工具切換"><a href="./" class="home">← 首頁</a><a href="pattern.html"><span class="no">01</span>版片 PNG 匯出器</a><a href="placement.html" aria-current="page"><span class="no">02</span>印圖定位產生器</a><a href="admin.html"><span class="no">03</span>規範後台</a></nav>
   <h1>印圖定位產生器<span>PSD 匯入 · 多印圖 · 動態標註 · PNG／分圖層 PSD</span></h1>
 
 <section id="psdImportSection">
@@ -570,6 +575,7 @@ aside>.toolnav+h1{padding-top:12px}
     <h2><b>8</b>品牌跳檔：自動帶入 → 手動微調</h2>
     <p class="lockhint">導入版片與印圖、完成基碼定位後操作</p>
     <p class="hint">規範只是參考預設值。按「套用」才會寫入；之後可在下表逐碼改縮放與距離。</p>
+    <div class="brRulesBar"><p id="brRulesState" role="status"></p><button type="button" id="brRulesReload">↻ 更新規範</button><a href="admin.html" target="_blank" rel="noopener">編輯規範 ↗</a></div>
     <div class="two">
       <label class="f"><em>品牌</em><select id="brandSel" aria-label="品牌"></select></label>
       <label class="f"><em>客群</em><select id="groupSel" aria-label="客群"></select></label>
@@ -3100,6 +3106,7 @@ const BRAND_RULES=[
   {id:'girls',name:'女童',sizes:'XS S M L XL XXL',pos:[],scale:[['XS S M L XL XXL',100]],note:'印圖分段：XS–M、L、XL–XXL。一般 M 碼用 100%，印圖過大可縮至 90%；其他段比例請手動填。'},
   {id:'boys',name:'男童',sizes:'XS S M L XL XXL',pos:[],scale:[['XS S M L XL XXL',100]],note:'印圖分段：XS–S、M–L、XL–XXL。一般 M 碼用 100%，印圖過大可縮至 90%；其他段比例請手動填。'}]}
 ];
+let brRulesMeta={version:0,updatedAt:'',editor:'',note:'',source:'builtin'};
 const BR_FILES='各品牌檔案：\\\\192.168.189.11\\jyyp\\3D_Work\\2D\\Data';
 function brCanon(s){
  let t=String(s||'').toUpperCase().replace(/\s+/g,''),m;
@@ -3184,7 +3191,7 @@ function brRefreshInfo(){
 }
 function brSyncJson(){
  const plans={};state.items.forEach(it=>{if(it.brPlan)plans[it.id]=it.brPlan;if(typeof it.brFollowH==='boolean')(plans[it.id]=plans[it.id]||{}).follow=it.brFollowH;});
- $('#brandPlanJson').value=JSON.stringify({brand:$('#brandSel').value,group:$('#groupSel').value,autoNote:$('#brAutoNote').checked,plans});
+ $('#brandPlanJson').value=JSON.stringify({brand:$('#brandSel').value,group:$('#groupSel').value,autoNote:$('#brAutoNote').checked,rules:brRulesMeta.version,plans});
 }
 function brAutoNote(g,base){
  if(!$('#brAutoNote').checked||!g)return;
@@ -3204,7 +3211,7 @@ function brApplyOne(it){
  let L=computeLayout(),baseG=L.geo.find(x=>x.size===base);
  if(plan.hasPct){try{const r=gradeSolve(it,baseG,{v:bv,h:bh});Object.assign(pv(it.id,base),{x:r.x,y:r.y});}catch(e){state.place[it.id]=snap.entries;throw Error(`「${it.name}」改縮放後基碼無法維持原距離：${e.message}`);}L=computeLayout();baseG=L.geo.find(x=>x.size===base);}
  const sv=av?(Math.sign(bv)||gradeDefaultSign(it,baseG,av)):0,sh=ah?(Math.sign(bh)||gradeDefaultSign(it,baseG,ah)):0,follow=brFollowH(it,bh);
- const rec={brand:g?.brand.id||'',group:g?.id||'',label:brLabel(g),base,follow,sizes:{[base]:{v:bv,h:bh,scale:pv(it.id,base).scale||100}}},fails=[];let ok=0;
+ const rec={brand:g?.brand.id||'',group:g?.id||'',label:brLabel(g),base,follow,rv:g?brRulesMeta.version:null,sizes:{[base]:{v:bv,h:bh,scale:pv(it.id,base).scale||100}}},fails=[];let ok=0;
  for(const x of L.geo){if(x.size===base)continue;const off=plan.rows[x.size].off,t={v:av?bv+sv*off:null,h:ah?(follow?bh+sh*off:bh):null};
   try{const r=gradeSolve(it,x,t);Object.assign(pv(it.id,x.size),{x:r.x,y:r.y});ok++;}catch(e){fails.push(x.size);}
   rec.sizes[x.size]={v:t.v,h:t.h,scale:pv(it.id,x.size).scale||100};}
@@ -3288,7 +3295,7 @@ gradeRefresh=function(){
    tr.querySelector('[data-br-restore]').hidden=!(plan&&manual&&size!==base);
   });
   const p=it.brPlan,stale=p&&p.base!==base;
-  $('#brPlanState').textContent=!p?'尚未套用':stale?`⚠️ 上次套用時基碼為 ${p.base}，目前為 ${base}，請重新套用。`:`上次套用：${p.label||'基碼距離（無品牌）'}｜基碼 ${p.base}`+(brManualCount(it)?`｜手動調整 ${brManualCount(it)} 格`:'');
+  $('#brPlanState').textContent=!p?'尚未套用':stale?`⚠️ 上次套用時基碼為 ${p.base}，目前為 ${base}，請重新套用。`:`上次套用：${p.label||'基碼距離（無品牌）'}｜基碼 ${p.base}`+(brManualCount(it)?`｜手動調整 ${brManualCount(it)} 格`:'')+(p.brand&&p.rv!=null&&brRulesMeta.version&&p.rv!==brRulesMeta.version?`｜⚠️ 套用時規範為 ${p.rv?'v'+p.rv:'內建'}，目前為 v${brRulesMeta.version}，需要時可重新套用。`:'');
  }else $('#brPlanState').textContent='';
  brRefreshInfo();
  $('#gradeUndo').disabled=!state.gradeUndo;
@@ -3313,7 +3320,7 @@ const brOldLoad=loadPlacementProject;loadPlacementProject=async function(file){
   if(typeof d.autoNote==='boolean')$('#brAutoNote').checked=d.autoNote;
   if(brBrand(d.brand)){$('#brandSel').value=d.brand;brFillGroups(d.group);}else{$('#brandSel').value='';brFillGroups();}
   const plans=d.plans&&typeof d.plans==='object'?d.plans:{};
-  state.items.forEach(it=>{const p=plans[it.id];if(!p||typeof p!=='object')return;if(typeof p.follow==='boolean')it.brFollowH=p.follow;if(p.sizes&&typeof p.sizes==='object'&&typeof p.base==='string')it.brPlan={brand:String(p.brand||''),group:String(p.group||''),label:brLabel(brGroup(String(p.brand||''),String(p.group||'')))||'',base:p.base,follow:!!p.follow,sizes:Object.fromEntries(Object.entries(p.sizes).filter(([,v])=>v&&typeof v==='object').map(([s,v])=>[s,{v:Number.isFinite(v.v)?v.v:null,h:Number.isFinite(v.h)?v.h:null,scale:Number.isFinite(v.scale)?v.scale:100}]))};});
+  state.items.forEach(it=>{const p=plans[it.id];if(!p||typeof p!=='object')return;if(typeof p.follow==='boolean')it.brFollowH=p.follow;if(p.sizes&&typeof p.sizes==='object'&&typeof p.base==='string')it.brPlan={brand:String(p.brand||''),group:String(p.group||''),label:brLabel(brGroup(String(p.brand||''),String(p.group||'')))||'',base:p.base,follow:!!p.follow,rv:Number.isFinite(p.rv)?p.rv:null,sizes:Object.fromEntries(Object.entries(p.sizes).filter(([,v])=>v&&typeof v==='object').map(([s,v])=>[s,{v:Number.isFinite(v.v)?v.v:null,h:Number.isFinite(v.h)?v.h:null,scale:Number.isFinite(v.scale)?v.scale:100}]))};});
  }else{$('#brandSel').value='';brFillGroups();}
  gradeTableSignature='';gradeRefresh();
 };
@@ -3437,6 +3444,116 @@ const v15Load=loadPlacementProject;loadPlacementProject=async function(file){
 };
 v15SyncHpsUI();$('#hpsOpts').hidden=!$('#hpsLine').checked;
 /* ================= /v15 ================= */
+
+/* v17：規範檢查（後台與定位產生器共用）。回傳 {errors:[], warnings:[]}，每項 {at, msg}。 */
+function brValidateRules(r){
+ const errors=[],warnings=[],E=(at,msg)=>errors.push({at,msg}),W=(at,msg)=>warnings.push({at,msg});
+ if(!r||typeof r!=='object'||!Array.isArray(r.brands)){E('規範','格式錯誤：缺少品牌清單。');return {errors,warnings};}
+ if(!r.brands.length)E('規範','至少需要一個品牌。');
+ const bids=new Set();
+ r.brands.forEach((b,bi)=>{
+  const bn=(b&&typeof b.name==='string'&&b.name.trim())||`第 ${bi+1} 個品牌`;
+  if(!b||typeof b!=='object'){E(bn,'格式錯誤。');return;}
+  if(typeof b.name!=='string'||!b.name.trim())E(bn,'請填品牌名稱。');
+  if(typeof b.id!=='string'||!/^[A-Za-z0-9_-]+$/.test(b.id))E(bn,'品牌代碼只能用英文、數字、- 或 _。');
+  else if(bids.has(b.id))E(bn,`品牌代碼「${b.id}」重複。`);else bids.add(b.id);
+  if(b.tips!=null&&(!Array.isArray(b.tips)||b.tips.some(t=>typeof t!=='string')))E(bn,'提示格式錯誤。');
+  if(!Array.isArray(b.groups)||!b.groups.length){E(bn,'至少需要一個客群。');return;}
+  const gids=new Set();
+  b.groups.forEach((g,gi)=>{
+   const gn=bn+' '+((g&&typeof g.name==='string'&&g.name.trim())||`第 ${gi+1} 個客群`);
+   if(!g||typeof g!=='object'){E(gn,'格式錯誤。');return;}
+   if(typeof g.name!=='string'||!g.name.trim())E(gn,'請填客群名稱。');
+   if(typeof g.id!=='string'||!/^[A-Za-z0-9_-]+$/.test(g.id))E(gn,'客群代碼只能用英文、數字、- 或 _。');
+   else if(gids.has(g.id))E(gn,`客群代碼「${g.id}」重複。`);else gids.add(g.id);
+   if(g.alias){
+    const [ab,ag]=String(g.alias).split('/'),tb=r.brands.find(x=>x&&x.id===ab),tg=tb&&Array.isArray(tb.groups)?tb.groups.find(x=>x&&x.id===ag):null;
+    if(!tg)E(gn,`參考的客群「${g.alias}」不存在。`);else if(tg.alias)E(gn,'參考的客群本身也是參考，請直接指向有規範的客群。');
+    return;
+   }
+   if(g.sizes!=null&&typeof g.sizes!=='string')E(gn,'尺碼格式錯誤。');
+   const sizes=brList(g.sizes).map(brCanon),set=new Set(sizes),dup=sizes.filter((s,i)=>sizes.indexOf(s)!==i);
+   if(dup.length)E(gn,`尺碼重複：${[...new Set(dup)].join('、')}。`);
+   const pos=g.pos||[],scale=g.scale||[];
+   if(!Array.isArray(pos)||!Array.isArray(scale)){E(gn,'分段格式錯誤。');return;}
+   if(!sizes.length&&(pos.length||scale.length))E(gn,'有分段但沒有填尺碼表。');
+   const seen=(list,label)=>{const used=new Map();list.forEach((p,k)=>{
+    if(!Array.isArray(p)||typeof p[0]!=='string'){E(gn,`${label}第 ${k+1} 段格式錯誤。`);return;}
+    const l=brList(p[0]).map(brCanon);if(!l.length)E(gn,`${label}第 ${k+1} 段沒有填尺碼。`);
+    l.forEach(s=>{if(sizes.length&&!set.has(s))E(gn,`${label}第 ${k+1} 段的 ${s} 不在尺碼表。`);if(used.has(s))E(gn,`${s} 同時出現在${label}第 ${used.get(s)+1} 段和第 ${k+1} 段。`);else used.set(s,k);});});return used;};
+   const pu=seen(pos,'定位'),su=seen(scale,'縮放');
+   pos.forEach((p,k)=>{if(!Array.isArray(p))return;if(typeof p[1]!=='number'||!Number.isFinite(p[1]))E(gn,`定位第 ${k+1} 段的位移不是數字。`);else if(Math.abs(p[1])>3)W(gn,`定位第 ${k+1} 段每碼 ${p[1]}″，數值偏大，請確認。`);if(p[2]!=null&&p[2]!=='flat')E(gn,`定位第 ${k+1} 段的方式格式錯誤。`);});
+   scale.forEach((p,k)=>{if(!Array.isArray(p))return;if(typeof p[1]!=='number'||!(p[1]>0&&p[1]<=1000))E(gn,`縮放第 ${k+1} 段的 % 需介於 1–1000。`);});
+   if(pos.length){
+    const zi=pos.map((p,k)=>Array.isArray(p)&&p[1]===0?k:-1).filter(k=>k>=0);
+    if(!zi.length)E(gn,'定位分段需要一段「0（按圖稿）」作為基準。');
+    else{const idx=sizes.map((s,i)=>pu.has(s)&&pos[pu.get(s)][1]===0?i:-1).filter(i=>i>=0);
+     if(idx.length&&idx[idx.length-1]-idx[0]+1!==idx.length)W(gn,'「0（按圖稿）」的尺碼不連續，中間的尺碼也會當成 0。');}
+    const miss=sizes.filter(s=>!pu.has(s));if(miss.length)W(gn,`${miss.join('、')} 沒有列在定位分段，會跟相鄰尺碼同位移。`);
+   }
+   if(scale.length){const miss=sizes.filter(s=>!su.has(s));if(miss.length)W(gn,`${miss.join('、')} 沒有列在縮放分段，套用時不改縮放。`);}
+  });
+ });
+ if(r.files!=null&&typeof r.files!=='string')E('規範','品牌檔案路徑格式錯誤。');
+ return {errors,warnings};
+}
+
+/* ================= v17：雲端品牌規範（規範後台） =================
+   開啟時：先用上次下載的規範（本機快取），再向規範後台取最新版。
+   後台無法連線或資料有誤時，沿用快取；都沒有則用內建規範。 */
+const BR_CACHE_KEY='dpc2d.rules.cache';
+function brApiUrl(){const u=String(window.DPC_RULES_API||'').trim();return /^https:\/\/|^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?\//.test(u)?u:'';}
+function brUseRules(r,source){
+ const chk=brValidateRules(r);if(chk.errors.length)return false;
+ const keepB=$('#brandSel').value,keepG=$('#groupSel').value;
+ BRAND_RULES.splice(0,BRAND_RULES.length,...JSON.parse(JSON.stringify(r.brands)));
+ brRulesMeta={version:Number(r.version)||0,updatedAt:String(r.updatedAt||''),editor:String(r.editor||''),note:String(r.note||''),source};
+ $('#brFiles').textContent=r.files?'各品牌檔案：'+r.files:'';
+ brFillBrands();
+ if(keepB&&brBrand(keepB)){$('#brandSel').value=keepB;brFillGroups(keepG);}else{$('#brandSel').value='';brFillGroups();}
+ if(keepB!==$('#brandSel').value||keepG!==$('#groupSel').value)brSyncJson();
+ gradeTableSignature='';gradeRefresh();brRulesStateRender();
+ return true;
+}
+function brDate(s){const d=new Date(s);if(!s||isNaN(d))return '';const p=n=>String(n).padStart(2,'0');return `${d.getFullYear()}/${p(d.getMonth()+1)}/${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;}
+let brRulesError='';
+function brRulesStateRender(){
+ const m=brRulesMeta,el=$('#brRulesState');if(!el)return;
+ const ver=m.version?`規範 v${m.version}｜${brDate(m.updatedAt)}｜${m.editor||'未署名'} 更新`:'內建規範（v16）';
+ const src={cloud:'已是最新版',cache:'使用上次下載的版本',builtin:''}[m.source]||'';
+ const warn=!brApiUrl()?'尚未設定規範後台網址。':brRulesError?brRulesError:'';
+ el.innerHTML=`<span>${flowEscape(ver)}${src?'　·　'+flowEscape(src):''}</span>${warn?`<br><span class="brRulesWarn">${flowEscape(warn)}</span>`:''}`;
+ el.title=m.note?'更新說明：'+m.note:'';
+}
+async function brFetchRules(manual){
+ const url=brApiUrl();brRulesError='';
+ if(!url){brRulesStateRender();if(manual)gradeMessage('尚未設定規範後台網址（rules-config.js），目前使用內建規範。',true);return;}
+ const btn=$('#brRulesReload');if(btn)btn.disabled=true;
+ try{
+  const ctl=new AbortController(),t=setTimeout(()=>ctl.abort(),10000);
+  const res=await fetch(url+(url.includes('?')?'&':'?')+'action=get&t='+Date.now(),{signal:ctl.signal,cache:'no-store'});clearTimeout(t);
+  const d=await res.json();
+  if(!d||!d.ok)throw Error('後台回應錯誤');
+  if(d.empty){brRulesError='規範後台還沒有發布任何版本，目前使用內建規範。';brRulesStateRender();return;}
+  const chk=brValidateRules(d.rules);if(chk.errors.length)throw Error('後台規範格式有誤（'+chk.errors[0].at+'：'+chk.errors[0].msg+'）');
+  const changed=Number(d.rules.version)!==brRulesMeta.version;
+  try{localStorage.setItem(BR_CACHE_KEY,JSON.stringify(d.rules));}catch(e){}
+  if(changed||brRulesMeta.source!=='cloud')brUseRules(d.rules,'cloud');
+  if(manual)gradeMessage(changed?`已更新為規範 v${d.rules.version}。`:`已是最新規範 v${d.rules.version}。`);
+ }catch(e){
+  brRulesError=(e.name==='AbortError'?'連線逾時':e.message&&!/fetch|network/i.test(e.message)?e.message:'無法連線到規範後台')+(brRulesMeta.source==='cache'?'，先使用上次下載的版本。':'，先使用內建規範。');
+  brRulesStateRender();if(manual)gradeMessage(brRulesError,true);
+ }finally{if(btn)btn.disabled=false;}
+}
+(function brRulesInit(){
+ let cached=null;try{cached=JSON.parse(localStorage.getItem(BR_CACHE_KEY)||'null');}catch(e){cached=null;}
+ if(!(cached&&brUseRules(cached,'cache')))brRulesStateRender();
+ $('#brRulesReload').onclick=()=>brFetchRules(true);
+ brFetchRules(false);
+ // 回到分頁時若超過 10 分鐘沒更新，自動再取一次
+ let last=Date.now();document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&Date.now()-last>600000){last=Date.now();brFetchRules(false);}});
+})();
+/* ================= /v17 ================= */
 
 refreshAlignRef();
 setupFolds();syncModeLabels();syncUnitLabels();updateGates();
