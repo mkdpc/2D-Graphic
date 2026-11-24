@@ -6,7 +6,7 @@
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%232f2f2d'/%3E%3Ctext x='16' y='21.5' font-size='13' text-anchor='middle' fill='%23fafaf7' font-family='Georgia,serif' letter-spacing='1'%3E2D%3C/text%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500&family=Noto+Sans+TC:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
 <script src="rules-config.js"></script>
 <style>
 :root{
@@ -115,6 +115,62 @@ dialog footer{display:flex;justify-content:flex-end;gap:8px;padding:12px 22px;bo
 .toolnav .home::before{content:"( "}.toolnav .home::after{content:" )"}
 .toolnav .no{font-family:"Cormorant Garamond","Microsoft JhengHei",serif;font-size:14px;font-weight:500;margin-right:6px;letter-spacing:0}
 
+/* v18 Swiss 工具感 */
+:root:not(#_){--bg:#eef0f3;--ink:#16181d;--ink2:#16181d;--muted:#5b6270;--line:#e3e6eb;--line2:#c9ced6;--soft:#f1f3f6;--ok:#1e6b45;--warn:#b45309;--danger:#b42318;
+  --acc:#1e3a5f;--acc-h:#152b47;--acc-soft:#e8eef5;
+  --serif:"Plus Jakarta Sans","Microsoft JhengHei","Noto Sans TC","PingFang TC",system-ui,sans-serif;--sans:var(--serif)}
+html,body{background:var(--bg);letter-spacing:0;font-size:14px;font-variant-numeric:tabular-nums}
+.top{background:#fff;padding:14px 40px}
+.brand{font:800 18px/1 var(--sans);letter-spacing:.16em}
+main{padding-top:32px}
+h1{font:700 24px/1.3 var(--sans);letter-spacing:.01em}
+.head p{font-size:12.5px}
+.bar{background:#fff;border:1px solid var(--line);border-radius:8px;padding:12px 14px}
+button,.btn{border-radius:6px;font-weight:600;letter-spacing:.01em;background:#fff;transition:background-color .16s ease,border-color .16s ease,color .16s ease,transform .08s ease}
+button:hover:not(:disabled),.btn:hover{border-color:#8f96a3}
+button:active:not(:disabled){transform:translateY(1px)}
+button.go{background:var(--acc);border-color:var(--acc);color:#fff}
+button.go:hover:not(:disabled){background:var(--acc-h);border-color:var(--acc-h)}
+button.ghost{background:transparent}
+button.ghost:hover:not(:disabled){color:var(--acc)}
+button.del:hover:not(:disabled){color:var(--danger)}
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+input[type=text],input[type=password],select,textarea{border:1px solid var(--line2);border-radius:6px;background:#fff;padding:7px 9px;transition:border-color .16s ease,box-shadow .16s ease}
+input:focus,select:focus,textarea:focus{border-color:var(--acc);box-shadow:0 0 0 3px var(--acc-soft)}
+td input[type=text],td select{border-color:transparent;background:transparent}
+td input[type=text]:hover,td select:hover{border-color:var(--line2);background:#fff}
+td input[type=text]:focus,td select:focus{background:#fff;border-color:var(--acc)}
+#banner:empty{display:none}
+label.f>em{font-size:12px;font-weight:500;letter-spacing:0}
+.banner{border-radius:8px;border-color:var(--line)}
+.banner h3,#side h2,.sectionTitle{font-family:var(--sans);letter-spacing:.01em}
+.layout{border-top:0;gap:20px}
+#side{background:#fff;border:1px solid var(--line);border-radius:8px;padding:16px;align-self:start}
+#brandList button{border-radius:6px;border:0;border-bottom:0;min-height:38px}
+#brandList li+li{margin-top:2px}
+#brandList button.on{background:var(--acc);color:#fff}
+#editor{background:#fff;border:1px solid var(--line);border-radius:8px;padding:20px 24px}
+.bhead input#bName{font:700 22px/1.3 var(--sans);letter-spacing:.01em}
+.grp{border-radius:8px;background:#fafbfc}
+h4{letter-spacing:.01em}
+.pv tr.base td{background:var(--acc-soft);color:var(--acc)}
+dialog{border-radius:12px;border-color:var(--line);box-shadow:0 24px 64px rgba(22,24,29,.22);background:#fff}
+dialog header h3{font-family:var(--sans);letter-spacing:.01em}
+dialog::backdrop{background:rgba(22,24,29,.38)}
+code{border-radius:4px}
+@media(max-width:900px){.top{padding:12px 16px}#side,#editor{padding:14px}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+/* v18 導覽列（四頁一致） */
+.toolnav{font:600 13px/1.5 "Plus Jakarta Sans","Microsoft JhengHei","Noto Sans TC","PingFang TC",system-ui,sans-serif!important;letter-spacing:0!important;gap:4px 4px!important;align-items:center!important}
+.toolnav a{color:#5b6270;padding:6px 10px;border-radius:6px;border-bottom:0!important;white-space:nowrap;transition:background-color .16s ease,color .16s ease}
+.toolnav a:hover{color:#16181d;background:#f1f3f6}
+.toolnav a[aria-current=page]{color:#1e3a5f;background:#e8eef5;font-weight:700}
+.toolnav .home::before,.toolnav .home::after{content:none!important}
+.toolnav .no{font-family:inherit!important;font-size:11.5px!important;font-weight:700!important;color:#6b7280;margin-right:6px!important;letter-spacing:.02em!important}
+.toolnav a[aria-current=page] .no{color:#1e3a5f}
+aside>.toolnav{padding:12px 16px 0!important}
+aside>.toolnav+h1{padding-top:10px!important}
+header .toolnav{margin-bottom:12px}
 </style>
 <body>
 <div class="top">
