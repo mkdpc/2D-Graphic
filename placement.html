@@ -460,7 +460,7 @@ header .toolnav{margin-bottom:12px}
 </style></head><body>
 
 <aside>
-  <nav class="toolnav" aria-label="工具切換"><a href="./" class="home">← 首頁</a><a href="pattern.html"><span class="no">01</span>版片 PNG 匯出器</a><a href="placement.html" aria-current="page"><span class="no">02</span>印圖定位產生器</a><a href="admin.html"><span class="no">03</span>規範後台</a></nav>
+  <nav class="toolnav" aria-label="工具切換"><a href="./" class="home">← 首頁</a><a href="http://192.168.3.65:5191/" data-cutter target="_blank" rel="noopener" title="同事維護的內網工具，另開分頁"><span class="no">01</span>切圖工具 ↗</a><a href="pattern.html"><span class="no">02</span>版片 PNG 匯出器</a><a href="placement.html" aria-current="page"><span class="no">03</span>印圖定位產生器</a><a href="admin.html"><span class="no">04</span>規範後台</a></nav><script src="tools-config.js"></script>
   <h1>印圖定位產生器<span>PSD 匯入 · 多印圖 · 動態標註 · PNG／分圖層 PSD</span></h1>
 
 <section id="psdImportSection">
@@ -527,8 +527,8 @@ header .toolnav{margin-bottom:12px}
   </section>
   <section id="s2">
     <h2><b>4</b>導入印圖</h2>
-    <p class="hint">導入後自動顯示在版片上，可立即拖曳。可放多個印圖；尺寸在步驟 6 統一調整。</p>
-    <div class="drop" id="dropArt"><b>拖曳印圖 PNG</b>可多選</div>
+    <p class="hint">建議先用<a href="http://192.168.3.65:5191/" data-cutter target="_blank" rel="noopener">切圖工具 ↗</a>切出印圖（輸出尺寸填實際大小），再把輸出的 PNG／JPG 拖進來；檔案內的 72 dpi 會換算成實際尺寸。導入後自動顯示在版片上，可立即拖曳；可放多個印圖，尺寸在步驟 6 統一調整。</p>
+    <div class="drop" id="dropArt"><b>拖曳印圖 PNG／JPG</b>可多選</div>
     <div id="artSummary" role="status">尚未導入印圖</div>
   </section>
 
@@ -1067,9 +1067,47 @@ function pngDpi(buf){
   }
   return null;
 }
+/* v20：JPG 也讀 DPI（JFIF APP0 密度；沒有時改讀 EXIF XResolution）。切圖工具輸出的 JPG 為 JFIF 72 dpi。 */
+function jpegDpi(buf){
+  const d=new DataView(buf);
+  if(d.byteLength<4||d.getUint16(0)!==0xFFD8)return null;
+  let off=2,exif=null;
+  while(off+4<=d.byteLength){
+    if(d.getUint8(off)!==0xFF)return exif;
+    const m=d.getUint8(off+1);
+    if(m===0xD9||m===0xDA)break;
+    const len=d.getUint16(off+2);
+    if(len<2)break;
+    const s=off+4;
+    if(m===0xE0&&len>=16&&d.getUint32(s)===0x4A464946&&d.getUint8(s+4)===0){
+      const u=d.getUint8(s+7),x=d.getUint16(s+8);
+      if(x>0&&u===1)return x;
+      if(x>0&&u===2)return x*2.54;
+    }
+    if(m===0xE1&&exif==null&&len>=16&&d.getUint32(s)===0x45786966){exif=exifDpi(d,s+6,len-8);}
+    off+=2+len;
+  }
+  return exif;
+}
+function exifDpi(d,t,size){
+  try{
+    const le=d.getUint16(t)===0x4949,u16=o=>d.getUint16(t+o,le),u32=o=>d.getUint32(t+o,le);
+    const ifd=u32(4);if(ifd+2>size)return null;
+    let xr=null,unit=2;
+    for(let i=0,n=u16(ifd);i<n;i++){
+      const e=ifd+2+i*12;if(e+12>size)break;
+      const tag=u16(e);
+      if(tag===0x011A){const v=u32(e+8);if(v+8<=size){const num=u32(v),den=u32(v+4);if(den)xr=num/den;}}
+      else if(tag===0x0128)unit=u16(e+8);
+    }
+    if(!(xr>0))return null;
+    return unit===3?xr*2.54:unit===2?xr:null;
+  }catch(e){return null;}
+}
+function imgDpi(buf){return pngDpi(buf)??jpegDpi(buf);}
 function readImage(file){
   return Promise.all([
-    file.arrayBuffer().then(pngDpi).catch(()=>null),
+    file.arrayBuffer().then(imgDpi).catch(()=>null),
     new Promise((res,rej)=>{const fr=new FileReader();
       fr.onload=()=>{const i=new Image();i.onload=()=>res(i);i.onerror=rej;i.src=fr.result;};
       fr.onerror=rej;fr.readAsDataURL(file);})
